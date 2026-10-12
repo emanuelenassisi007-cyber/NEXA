@@ -84,8 +84,7 @@
     function validaEmail() {
       const value = email.value.trim();
       const paginaPrecedente = document.referrer;
-      const verify =
-        paginaPrecedente === "http://localhost:5500/public/settings.html";
+      const verify = paginaPrecedente.includes("settings.html");
       const emailParagone = localStorage.getItem("email");
 
       if (value === "") {

@@ -94,7 +94,7 @@ async function gestisciDatiProtetti() {
 }
 async function checkAuth() {
   try {
-    const response = await fetch("http://localhost:3000/api/auth/me", {
+    const response = await fetch("/api/auth/me", {
       method: "GET",
       credentials: "include",
     });
@@ -113,7 +113,7 @@ async function checkAuth() {
 }
 async function getCurrentUser() {
   try {
-    const response = await fetch("http://localhost:3000/api/auth/me", {
+    const response = await fetch("/api/auth/me", {
       method: "GET",
       credentials: "include",
     });
@@ -141,7 +141,7 @@ async function mostraProfilo() {
 
   if (user) {
     if (user.avatar) {
-      const baseUrl = "http://localhost:3000";
+      const baseUrl = window.location.origin;
       imgElement.src = baseUrl + user.avatar;
       imgElement.style.display = "block";
       name.style.display = "none";

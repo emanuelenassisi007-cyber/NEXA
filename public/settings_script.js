@@ -145,7 +145,7 @@ async function gestisciDatiProtetti() {
 let email = "";
 async function checkAuth() {
   try {
-    const response = await fetch("http://localhost:3000/api/auth/me", {
+    const response = await fetch("/api/auth/me", {
       method: "GET",
       credentials: "include",
     });
@@ -169,7 +169,7 @@ async function checkAuth() {
 }
 async function isAdmin() {
   try {
-    const response = await fetch("http://localhost:3000/api/auth/me", {
+    const response = await fetch("/api/auth/me", {
       method: "GET",
       credentials: "include",
     });
@@ -191,7 +191,7 @@ async function isAdmin() {
 }
 async function getCurrentUser() {
   try {
-    const response = await fetch("http://localhost:3000/api/auth/me", {
+    const response = await fetch("/api/auth/me", {
       method: "GET",
       credentials: "include",
     });
@@ -213,7 +213,7 @@ const lastName = document.getElementById("last_name");
 const emailUser = document.getElementById("email_user");
 async function getDataUser() {
   try {
-    const response = await fetch("http://localhost:3000/api/auth/me", {
+    const response = await fetch("/api/auth/me", {
       method: "GET",
       credentials: "include",
     });
@@ -315,7 +315,7 @@ async function mostraProfilo() {
 
   if (user) {
     if (user.avatar) {
-      const baseUrl = "http://localhost:3000";
+      const baseUrl = window.location.origin;
       imgElement.src = baseUrl + user.avatar;
       imgElement.style.display = "block";
       name.style.display = "none";
@@ -810,7 +810,7 @@ async function loadUserProfile() {
     initialsElement.innerText = initials;
     initialsUser = initials;
     if (user.avatar) {
-      const baseUrl = "http://localhost:3000";
+      const baseUrl = window.location.origin;
 
       imgElement.src = baseUrl + user.avatar;
       imgElement.style.display = "block";
@@ -1422,7 +1422,7 @@ document.getElementById("btn-confirm-delete").addEventListener("click", () => {
     password: password.value.trim(),
   };
 
-  fetch("http://localhost:3000/api/auth/deleteWorkspace", {
+  fetch("/api/auth/deleteWorkspace", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -1489,7 +1489,7 @@ document
       password: passwordDeactive.value.trim(),
     };
 
-    fetch("http://localhost:3000/api/auth/deactivateAccount", {
+    fetch("/api/auth/deactivateAccount", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -57,6 +57,10 @@ app.use(
   },
   express.static(path.join(__dirname, "uploads")),
 );
+app.use(express.static(path.join(__dirname, "public")));
+app.get("/", (req, res) => {
+  res.redirect("/login.html");
+});
 
 io.use((socket, next) => {
   try {
@@ -83,4 +87,6 @@ const port = process.env.PORT || 3000;
 
 app.use("/api/auth", authRoutes);
 
-server.listen(port, () => {});
+server.listen(port, () => {
+  console.log(`Server avviato sulla porta ${port}`);
+});

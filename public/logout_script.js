@@ -101,7 +101,7 @@ logout.addEventListener("click", (e) => {
     password: password.value.trim(),
   };
 
-  fetch("http://localhost:3000/api/auth/logout", {
+  fetch("/api/auth/logout", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
