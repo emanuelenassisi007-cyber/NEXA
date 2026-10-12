@@ -20,6 +20,7 @@
     "express": "^5.2.1",
     "express-rate-limit": "^8.7.0",
     "multer": "^2.4.0",
+    "mysql2": "^3.24.5",
     "node-cron": "^4.6.0",
     "otplib": "^13.5.0",
     "qrcode": "^1.5.4",
