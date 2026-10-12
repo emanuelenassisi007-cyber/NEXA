@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Order Detail</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link rel="stylesheet" href="style.css" />
+    <script>
+      const savedTheme = localStorage.getItem("theme");
+
+      if (savedTheme === "dark") {
+        document.documentElement.classList.add("dark-mode");
+      }
+    </script>
+    <script
+      src="https://kit.fontawesome.com/be6af1d745.js"
+      crossorigin="anonymous"
+    ></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <style>
+      .temp {
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+        padding: 4px;
+        border: 1px solid var(--border-secondary);
+        border-radius: 8px;
+        background-color: var(--surface-color);
+      }
+
+      .temp > span {
+        cursor: pointer;
+        padding: 8px 4px;
+        border-radius: 8px;
+        color: var(--text-secondary);
+        transition:
+          background-color 0.2s ease,
+          color 0.2s ease;
+      }
+
+      .temp > span:hover {
+        color: var(--text-color);
+        background-color: var(--surface-secondary);
+      }
+
+      .chart-container {
+        position: relative;
+        width: 100%;
+        height: 300px;
+      }
+
+      .temp > span.activeFilter {
+        background-color: var(--surface-secondary);
+        color: var(--text-color);
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body style="flex-direction: row; align-items: start; justify-content: start">
+    <div class="menu">
+      <div
+        style="
+          display: flex;
+          flex-direction: row;
+          gap: 10px;
+          align-items: center;
+          margin-bottom: 30px;
+        "
+      >
+        <div style="display: flex; flex-direction: column">
+          <div class="logo"></div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 5px">
+          <span class="title" style="font-size: 14px">Nexa</span>
+          <span class="subtitle-form" style="font-size: 10px"
+            >Business Management System</span
+          >
+        </div>
+      </div>
+      <div
+        style="
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          height: calc(100vh - 100px);
+          box-sizing: border-box;
+        "
+      >
+        <div>
+          <a class="link" href="dashboard.html">
+            <i class="fa-solid fa-chart-bar" style="color: #686868"></i>
+            <span>Dashboard</span>
+          </a>
+          <a class="link" href="customers.html">
+            <i class="fa-solid fa-users" style="color: #686868"></i>
+            <span>Customers</span>
+          </a>
+          <a class="link" href="products.html">
+            <i class="fa-solid fa-box-open" style="color: #686868"></i>
+            <span>Products & Services</span>
+          </a>
+          <a class="link" id="active" href="orders.html">
+            <i class="fa-solid fa-cart-shopping" style="color: #686868"></i>
+            <span>Orders</span>
+          </a>
+          <a class="link" href="appointments.html">
+            <i class="fa-solid fa-calendar" style="color: #686868"></i>
+            <span>Appointments</span>
+          </a>
+          <a class="link" href="users.html">
+            <i class="fa-regular fa-user" style="color: #686868"></i>
+            <span>Users</span>
+          </a>
+          <a class="link" href="analytics.html">
+            <i class="fa-solid fa-chart-simple" style="color: #686868"></i>
+            <span>Analytics</span>
+          </a>
+        </div>
+        <div>
+          <hr
+            style="
+              border: none;
+              height: 0.1px;
+              background-color: rgb(225, 225, 230);
+            "
+          />
+          <a class="link" href="notifications.html">
+            <i class="fa-solid fa-bell" style="color: #686868"></i>
+            <span>Notifications</span>
+          </a>
+          <a class="link" href="settings.html">
+            <i class="fa-solid fa-gear" style="color: #686868"></i>
+            <span>Settings</span>
+          </a>
+          <a class="link" href="help.html">
+            <i class="fa-solid fa-circle-question" style="color: #686868"></i>
+            <span>Help</span>
+          </a>
+          <a class="link" href="logout.html">
+            <i
+              class="fa-solid fa-right-from-bracket"
+              style="color: #686868"
+            ></i>
+            <span>Logout</span>
+          </a>
+        </div>
+      </div>
+    </div>
+    <div class="home">
+      <div
+        style="
+          padding: 20px 30px;
+          display: flex;
+          justify-content: space-between;
+          border-bottom: #686868;
+        "
+      >
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <span id="current_section"></span>
+          <span id="navigation"></span>
+        </div>
+        <div
+          style="
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 10px;
+          "
+        >
+          <div class="theme-toggle" id="themeToggle" style="cursor: pointer">
+            <i class="fa-regular fa-moon" style="color: var(--text-color)"></i>
+          </div>
+          <div class="notification-container">
+            <button id="notification-btn" class="bell-button">
+              <i
+                class="fa-regular fa-bell"
+                style="color: var(--text-color)"
+              ></i>
+              <span id="notification-badge" class="badge">0</span>
+            </button>
+
+            <div id="notification-dropdown" class="notification-dropdown">
+              <div class="dropdown-header">
+                <span style="font-size: 14px; font-weight: bold"
+                  >Notifiche</span
+                >
+                <span
+                  style="font-size: 12px; font-weight: normal; cursor: pointer"
+                  id="readAll"
+                  >Leggi tutto</span
+                >
+              </div>
+              <ul id="notification-list" class="dropdown-list">
+                <li class="empty-message">Nessuna nuova notifica</li>
+              </ul>
+            </div>
+          </div>
+          <div
+            style="
+              display: flex;
+              flex-direction: row;
+              align-items: center;
+              gap: 10px;
+            "
+          >
+            <div style="margin-left: 30px">
+              <span id="nameComplete"></span>
+              <span id="surnameComplete"></span>
+            </div>
+            <a class="profile" href="settings.html#profile">
+              <img
+                id="avatar-img"
+                src=""
+                alt="Avatar"
+                style="
+                  display: none;
+                  width: 100%;
+                  height: 100%;
+                  object-fit: cover;
+                  object-position: center;
+                  border-radius: 50%;
+                "
+              />
+              <span id="name"></span>
+              <span id="surname"></span>
+            </a>
+          </div>
+        </div>
+      </div>
+      <hr
+        style="
+          border: none;
+          height: 0.1px;
+          background-color: rgb(225, 225, 230);
+        "
+      />
+      <div class="customer">
+        <div
+          style="
+            padding: 40px, 0px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: #686868;
+          "
+        >
+          <div
+            style="
+              display: flex;
+              flex-direction: column;
+              gap: 10px;
+              width: 100%;
+            "
+          >
+            <div id="back">
+              <i class="fa-solid fa-angle-left" style="color: grey"></i>
+              <span style="font-size: 14px; color: grey"> Back to orders</span>
+            </div>
+            <span style="font-size: 25px" id="idOrdine"></span>
+            <div
+              style="
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+              "
+            >
+              <div
+                style="
+                  display: flex;
+                  flex-direction: row;
+                  align-items: center;
+                  width: 100%;
+                  gap: 10px;
+                "
+              >
+                <span
+                  style="font-size: 14px; color: grey; width: 24%"
+                  id="date"
+                ></span>
+                <div class="boxStatus">
+                  <span style="font-size: 12px" id="status"></span>
+                </div>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  flex-direction: row;
+                  align-items: center;
+                  gap: 10px;
+                "
+              >
+                <button
+                  class="add-order-btn"
+                  id="cancel-order"
+                  style="
+                    display: flex;
+                    width: 150px;
+                    text-decoration: none;
+                    background-color: red;
+                    padding: 8px 8px;
+                    cursor: pointer;
+                  "
+                >
+                  Cancel order
+                </button>
+                <button
+                  class="add-order-btn"
+                  id="complete-order"
+                  style="
+                    display: flex;
+                    width: 150px;
+                    text-decoration: none;
+                    background-color: green;
+                    padding: 8px 8px;
+                    cursor: pointer;
+                  "
+                >
+                  Confirm order
+                </button>
+                <button
+                  class="add-order-btn"
+                  id="print-btn"
+                  style="
+                    width: 110px;
+                    text-decoration: none;
+                    padding: 8px 8px;
+                    cursor: pointer;
+                  "
+                >
+                  Print Invoice
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: row; gap: 20px">
+          <div class="box-customers" style="width: 60%">
+            <span style="font-size: 14px; font-weight: bold">Order Items </span>
+            <hr
+              style="
+                width: 100%;
+                border: none;
+                border-top: 1px solid #dfe3ea;
+                margin: 10px 0;
+              "
+            />
+            <div class="prodotti"></div>
+          </div>
+          <div class="box-customers" style="width: 40%">
+            <div
+              style="
+                display: flex;
+                flex-direction: column;
+                align-items: start;
+                gap: 20px;
+              "
+            >
+              <div
+                style="
+                  display: flex;
+                  width: 100%;
+                  flex-direction: row;
+                  align-items: center;
+                  justify-content: space-between;
+                "
+              >
+                <span style="font-size: 14px; font-weight: bold">Summary </span>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  flex-direction: row;
+                  width: 100%;
+                  align-items: center;
+                  justify-content: space-between;
+                "
+              >
+                <span style="font-size: 13px; color: grey; font-weight: normal"
+                  >Subtotal</span
+                >
+                <span
+                  style="font-size: 13px; color: grey; font-weight: normal"
+                  id="subtotal"
+                ></span>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  flex-direction: row;
+                  width: 100%;
+                  align-items: center;
+                  justify-content: space-between;
+                "
+              >
+                <span style="font-size: 13px; color: grey; font-weight: normal"
+                  >Discaunt</span
+                >
+                <span style="font-size: 13px; color: grey; font-weight: normal"
+                  >€0.00</span
+                >
+              </div>
+              <div
+                style="
+                  display: flex;
+                  flex-direction: row;
+                  width: 100%;
+                  align-items: center;
+                  justify-content: space-between;
+                "
+              >
+                <span style="font-size: 13px; color: grey; font-weight: normal"
+                  >Tax</span
+                >
+                <span style="font-size: 13px; color: grey; font-weight: normal"
+                  >€0.00</span
+                >
+              </div>
+              <hr
+                style="
+                  width: 100%;
+                  border: none;
+                  border-top: 1px solid #dfe3ea;
+                  margin: 10px 0;
+                "
+              />
+              <div
+                style="
+                  display: flex;
+                  flex-direction: row;
+                  width: 100%;
+                  align-items: center;
+                  justify-content: space-between;
+                "
+              >
+                <span
+                  style="
+                    font-size: 16px;
+                    color: var(--text-color);
+                    font-weight: normal;
+                  "
+                  >Total</span
+                >
+                <span
+                  style="
+                    font-size: 20px;
+                    color: var(--text-color);
+                    font-weight: bold;
+                  "
+                  id="total"
+                  >€0.00</span
+                >
+              </div>
+              <hr
+                style="
+                  width: 100%;
+                  border: none;
+                  border-top: 1px solid #dfe3ea;
+                  margin: 10px 0;
+                "
+              />
+              <div
+                style="
+                  display: flex;
+                  flex-direction: row;
+                  align-items: center;
+                  gap: 7px;
+                "
+              >
+                <div class="profile" style="width: 40px; height: 40px">
+                  <span id="nameCustomer"></span>
+                  <span id="surnameCustomer"></span>
+                </div>
+                <div
+                  style="
+                    display: flex;
+                    flex-direction: column;
+                    align-items: start;
+                    gap: 4px;
+                  "
+                >
+                  <span
+                    style="font-size: 11px; color: grey; font-weight: normal"
+                    >Customer</span
+                  >
+                  <span
+                    style="
+                      font-size: 12px;
+                      color: var(--text-color);
+                      font-weight: bold;
+                      text-transform: capitalize;
+                    "
+                    id="customer"
+                  ></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="../public/config.js"></script>
+    <script src="http://localhost:3000/socket.io/socket.io.js"></script>
+    <script src="orderDetail_script.js"></script>
+  </body>
+</html>

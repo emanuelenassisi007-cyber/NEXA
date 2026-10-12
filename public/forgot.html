@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+    <title>Forgot password</title>
+    <script>
+      const savedTheme = localStorage.getItem("theme");
+
+      if (savedTheme === "dark") {
+        document.documentElement.classList.add("dark-mode");
+      } else {
+      }
+    </script>
+    <script
+      src="https://kit.fontawesome.com/be6af1d745.js"
+      crossorigin="anonymous"
+    ></script>
+    <style>
+      .subtitle-form {
+        font-weight: normal;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 11px;
+        color: grey;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container-error">
+      <img
+        src="images/circle-exclamation-solid.png"
+        alt="Warning"
+        width="25px"
+      />
+      <span id="error-text"></span>
+    </div>
+    <div class="container">
+      <div
+        style="
+          display: flex;
+          flex-direction: row;
+          gap: 10px;
+          align-items: center;
+          margin-bottom: 30px;
+        "
+      >
+        <div style="display: flex; flex-direction: column">
+          <div class="logo"></div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 5px">
+          <span class="title">Nexa</span>
+          <span class="subtitle-form">Business Management System</span>
+        </div>
+      </div>
+      <span
+        class="title"
+        style="font-size: 25px; font-weight: normal; margin-bottom: 10px"
+        >Recover password</span
+      >
+      <span class="subtitle" style="font-weight: normal"
+        >We will send you a link to your email address to recover your
+        password.</span
+      >
+      <form id="form">
+        <span class="subtitle-form">Email</span>
+        <input type="text" required placeholder="you@company.com" id="email" />
+        <span id="email-error" style="color: red; display: none"></span>
+      </form>
+      <button class="login" id="login">Send email</button>
+    </div>
+  </body>
+  <script src="../public/config.js"></script>
+  <script>
+    const email = document.getElementById("email");
+    const email_error = document.getElementById("email-error");
+    const login = document.getElementById("login");
+    const container_error = document.querySelector(".container-error");
+    const error_text = document.getElementById("error-text");
+
+    const regex =
+      /^[a-zA-Z0-9.!#\$%&'*+/=?^_{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
+
+    function validaEmail() {
+      const value = email.value.trim();
+      const paginaPrecedente = document.referrer;
+      const verify =
+        paginaPrecedente === "http://localhost:5500/public/settings.html";
+      const emailParagone = localStorage.getItem("email");
+
+      if (value === "") {
+        email_error.textContent = "Il campo email non può essere vuoto.";
+        email_error.style.display = "block";
+        return false;
+      } else if (!regex.test(value)) {
+        email_error.textContent =
+          "Inserisci un indirizzo email valido (es. you@company.com).";
+        email_error.style.display = "block";
+        return false;
+      } else if (verify && value !== emailParagone) {
+        email_error.textContent =
+          "L'email inserita non corrisponde all'email con cui ti sei registrato.";
+        email_error.style.display = "block";
+        return false;
+      } else {
+        email_error.textContent = "";
+        email_error.style.display = "none";
+        return true;
+      }
+    }
+
+    email.addEventListener("input", validaEmail);
+
+    container_error.classList.remove("active");
+    container_error.classList.remove("success");
+    error_text.textContent = "";
+
+    login.addEventListener("click", (e) => {
+      e.preventDefault();
+      if (!email.value.trim()) {
+        container_error.classList.add("active");
+        error_text.textContent = "Il campo email è obbligatorio";
+        return false;
+      }
+      const isEmailValida = validaEmail();
+
+      if (!isEmailValida) {
+        container_error.classList.add("active");
+        error_text.textContent = "Correggi gli errori prima di inviare";
+        return false;
+      }
+
+      const body = JSON.stringify({
+        email: email.value.trim(),
+      });
+
+      const testoOriginale = login.innerHTML;
+      login.disabled = true;
+      login.innerHTML = `Salvataggio...`;
+      container_error.classList.add("active");
+      container_error.classList.add("success");
+      error_text.style.display = "block";
+      error_text.innerHTML = `<span class="spinner"></span> Invio dell'email in corso...`;
+
+      fetch(`${API_URL}/api/auth/forgot-password`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: body,
+      })
+        .then((response) => {
+          if (!response.ok) {
+            return response.json().then((errData) => {
+              throw new Error(
+                errData.error ||
+                  errData.message ||
+                  "Errore sconosciuto dal server",
+              );
+            });
+          }
+          return response.json();
+        })
+        .then((data) => {
+          container_error.classList.add("active");
+          container_error.classList.add("success");
+          error_text.textContent =
+            "Email inviata. Controlla la tua casella postale";
+          if (savedTheme === "dark") {
+            localStorage.setItem("theme", "dark");
+          } else {
+            localStorage.setItem("theme", "light");
+          }
+          const paginaPrecedente = document.referrer;
+          const verify = paginaPrecedente === "/public/settings.html";
+          if (verify) {
+            localStorage.setItem("provenienza", "settings");
+          } else {
+            localStorage.setItem("provenienza", "login");
+          }
+        })
+        .catch((error) => {
+          console.error("Si è verificato un problema:", error);
+          container_error.classList.add("active");
+          error_text.textContent = error.message;
+          return false;
+        })
+        .finally(() => {
+          login.disabled = false;
+          login.innerHTML = testoOriginale;
+        });
+    });
+  </script>
+</html>

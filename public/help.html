@@ -1,0 +1,1365 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Help</title>
+    <link rel="stylesheet" href="style.css" />
+    <script>
+      const savedTheme = localStorage.getItem("theme");
+
+      if (savedTheme === "dark") {
+        document.documentElement.classList.add("dark-mode");
+      }
+    </script>
+    <script
+      src="https://kit.fontawesome.com/be6af1d745.js"
+      crossorigin="anonymous"
+    ></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <style>
+      .row {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+      }
+      select {
+        font-size: 14px;
+      }
+      .response {
+        display: none;
+        font-size: 12px;
+        color: var(--text-secondary);
+        margin: 10px 0;
+        line-height: 2em;
+      }
+      .question {
+        cursor: pointer;
+      }
+      .question:hover > span {
+        color: blue;
+      }
+
+      .response.show {
+        display: block;
+      }
+
+      .question {
+        cursor: pointer;
+      }
+      .iconArrow {
+        display: inline-block;
+        transition: transform 0.3s ease;
+      }
+      .question.active .iconArrow {
+        transform: rotate(180deg);
+      }
+      .guida-item {
+        display: flex;
+        align-items: center;
+        padding: 16px 0;
+        border-bottom: 1px solid var(--border-secondary);
+        cursor: pointer;
+      }
+
+      .guida-item:last-of-type,
+      .noLine {
+        border-bottom: none;
+      }
+      .faq-item .response {
+        display: none;
+        font-size: 14px;
+        color: grey;
+        line-height: 1.6;
+        padding-bottom: 16px;
+        margin-top: -4px;
+      }
+
+      .faq-item.attiva .response {
+        display: block;
+      }
+
+      .faq-item.attiva .iconArrow {
+        transform: rotate(180deg) translateY(4px);
+      }
+    </style>
+  </head>
+  <body style="flex-direction: row; align-items: start; justify-content: start">
+    <div class="menu">
+      <div
+        style="
+          display: flex;
+          flex-direction: row;
+          gap: 10px;
+          align-items: center;
+          margin-bottom: 30px;
+        "
+      >
+        <div style="display: flex; flex-direction: column">
+          <div class="logo"></div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 5px">
+          <span class="title" style="font-size: 14px">Nexa</span>
+          <span class="subtitle-form" style="font-size: 10px"
+            >Business Management System</span
+          >
+        </div>
+      </div>
+      <div
+        style="
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          height: calc(100vh - 100px);
+          box-sizing: border-box;
+        "
+      >
+        <div>
+          <a class="link" href="dashboard.html">
+            <i class="fa-solid fa-chart-bar" style="color: #686868"></i>
+            <span>Dashboard</span>
+          </a>
+          <a class="link" href="customers.html">
+            <i class="fa-solid fa-users" style="color: #686868"></i>
+            <span>Customers</span>
+          </a>
+          <a class="link" href="products.html">
+            <i class="fa-solid fa-box-open" style="color: #686868"></i>
+            <span>Products & Services</span>
+          </a>
+          <a class="link" href="orders.html">
+            <i class="fa-solid fa-cart-shopping" style="color: #686868"></i>
+            <span>Orders</span>
+          </a>
+          <a class="link" href="appointments.html">
+            <i class="fa-solid fa-calendar" style="color: #686868"></i>
+            <span>Appointments</span>
+          </a>
+          <a class="link" href="users.html">
+            <i class="fa-regular fa-user" style="color: #686868"></i>
+            <span>Users</span>
+          </a>
+        </div>
+        <div>
+          <hr
+            style="
+              border: none;
+              height: 0.1px;
+              background-color: rgb(225, 225, 230);
+            "
+          />
+          <a class="link" href="notifications.html">
+            <i class="fa-solid fa-bell" style="color: #686868"></i>
+            <span>Notifications</span>
+          </a>
+          <a class="link" href="settings.html">
+            <i class="fa-solid fa-gear" style="color: #686868"></i>
+            <span>Settings</span>
+          </a>
+          <a class="link" id="active" href="help.html">
+            <i class="fa-solid fa-circle-question" style="color: #686868"></i>
+            <span>Help</span>
+          </a>
+          <a class="link" href="logout.html">
+            <i
+              class="fa-solid fa-right-from-bracket"
+              style="color: #686868"
+            ></i>
+            <span>Logout</span>
+          </a>
+        </div>
+      </div>
+    </div>
+    <div class="home">
+      <div
+        style="
+          padding: 20px 30px;
+          display: flex;
+          justify-content: space-between;
+          border-bottom: #686868;
+        "
+      >
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <span id="current_section"></span>
+          <span id="navigation"></span>
+        </div>
+        <div
+          style="
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 10px;
+          "
+        >
+          <div class="theme-toggle" id="themeToggle" style="cursor: pointer">
+            <i class="fa-regular fa-moon" style="color: var(--text-color)"></i>
+          </div>
+          <div class="notification-container">
+            <button id="notification-btn" class="bell-button">
+              <i
+                class="fa-regular fa-bell"
+                style="color: var(--text-color)"
+              ></i>
+              <span id="notification-badge" class="badge">0</span>
+            </button>
+
+            <div id="notification-dropdown" class="notification-dropdown">
+              <div class="dropdown-header">
+                <span style="font-size: 14px; font-weight: bold"
+                  >Notifiche</span
+                >
+                <span
+                  style="font-size: 12px; font-weight: normal; cursor: pointer"
+                  id="readAll"
+                  >Leggi tutto</span
+                >
+              </div>
+              <ul id="notification-list" class="dropdown-list">
+                <li class="empty-message">Nessuna nuova notifica</li>
+              </ul>
+            </div>
+          </div>
+
+          <div
+            style="
+              display: flex;
+              flex-direction: row;
+              align-items: center;
+              gap: 10px;
+            "
+          >
+            <div style="margin-left: 30px">
+              <span id="nameComplete"></span>
+              <span id="surnameComplete"></span>
+            </div>
+            <a class="profile" href="settings.html#profile">
+              <img
+                id="avatar-img"
+                src=""
+                alt="Avatar"
+                style="
+                  display: none;
+                  width: 100%;
+                  height: 100%;
+                  object-fit: cover;
+                  object-position: center;
+                  border-radius: 50%;
+                "
+              />
+              <span id="name"></span>
+              <span id="surname"></span>
+            </a>
+          </div>
+        </div>
+      </div>
+      <hr
+        style="
+          border: none;
+          height: 0.1px;
+          background-color: var(--border-secondary);
+        "
+      />
+      <div
+        class="container-error"
+        style="width: 98%; margin: 20px; margin-bottom: 0px"
+      >
+        <i class="fa-solid fa-lock" style="size: 25px"></i>
+        <span id="error-form"></span>
+      </div>
+      <div class="customer" style="margin: 40px 30px 0px">
+        <div style="display: flex; flex-direction: column; gap: 10px">
+          <span style="font-size: 25px">Help center</span>
+          <span style="font-size: 14px; color: grey"
+            >Find answers and learn how to use Nexa.</span
+          >
+        </div>
+      </div>
+      <div
+        class="box-customers"
+        style="margin-left: 25px; width: 97%; background: var(--linear-color)"
+      >
+        <div
+          style="
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+          "
+        >
+          <div style="display: flex; flex-direction: column; gap: 13px">
+            <span
+              style="
+                font-size: 11px;
+                font-weight: bold;
+                color: #635bff;
+                letter-spacing: 0.2em;
+              "
+              >NEXA SUPPORT</span
+            >
+            <span style="font-size: 20px; font-weight: bold"
+              >How can we help?</span
+            >
+            <span style="font-size: 14px; font-weight: normal; color: grey"
+              >Search guides, answers, and practical tips for your
+              workspace.</span
+            >
+          </div>
+          <div class="search-customer">
+            <i
+              class="fa-solid fa-magnifying-glass"
+              style="color: rgb(168, 166, 166)"
+            ></i>
+            <input
+              type="text"
+              placeholder="Search help articles..."
+              id="searchInput"
+              oninput="filtraLeGuide()"
+            />
+          </div>
+        </div>
+      </div>
+      <div
+        style="
+          display: flex;
+          flex-direction: row;
+          align-items: start;
+          gap: 20px;
+          margin-left: 20px;
+          margin-right: 13px;
+        "
+      >
+        <div class="box-customers">
+          <div
+            style="
+              display: flex;
+              flex-direction: column;
+              gap: 5px;
+              width: 100%;
+              margin-bottom: 20px;
+            "
+          >
+            <span style="font-size: 14px; font-weight: bold"
+              >Popular guides</span
+            >
+            <span style="font-size: 12px; color: grey"
+              >Quick answers for everyday tasks.
+            </span>
+          </div>
+          <div
+            style="
+              display: flex;
+              flex-direction: row;
+              align-items: center;
+              justify-content: space-between;
+              cursor: pointer;
+            "
+            id="info1"
+            class="guida-item"
+            data-guida="nexa"
+            onclick="apriLaGuida('nexa')"
+          >
+            <div
+              style="
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                gap: 10px;
+              "
+            >
+              <div
+                class="profile"
+                style="width: 38px; height: 38px; border-radius: 12px"
+              >
+                <span
+                  ><i
+                    class="fa-regular fa-circle-question"
+                    style="color: #635bff; font-size: 18px"
+                  ></i
+                ></span>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: start;
+                  gap: 6px;
+                "
+              >
+                <span
+                  style="
+                    font-size: 14px;
+                    color: var(--text-color);
+                    font-weight: bold;
+                    align-items: start;
+                  "
+                  >Getting started with Nexa</span
+                >
+                <span
+                  style="
+                    font-size: 11px;
+                    color: grey;
+                    font-weight: normal;
+                    align-items: start;
+                  "
+                >
+                  Set up your workspace, add your first customer, and create
+                  your first order.</span
+                >
+              </div>
+            </div>
+            <i class="fa-solid fa-arrow-right" style="font-size: 12px"></i>
+          </div>
+          <div
+            style="
+              display: flex;
+              flex-direction: row;
+              align-items: center;
+              justify-content: space-between;
+              cursor: pointer;
+            "
+            id="info2"
+            class="guida-item"
+            data-guida="customers"
+            onclick="apriLaGuida('customers')"
+          >
+            <div
+              style="
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                gap: 10px;
+              "
+            >
+              <div
+                class="profile"
+                style="width: 38px; height: 38px; border-radius: 12px"
+              >
+                <span
+                  ><i
+                    class="fa-regular fa-circle-question"
+                    style="color: #635bff; font-size: 18px"
+                  ></i
+                ></span>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: start;
+                  gap: 6px;
+                "
+              >
+                <span
+                  style="
+                    font-size: 14px;
+                    color: var(--text-color);
+                    font-weight: bold;
+                    align-items: start;
+                  "
+                  >Managing customers</span
+                >
+                <span
+                  style="
+                    font-size: 11px;
+                    color: grey;
+                    font-weight: normal;
+                    align-items: start;
+                  "
+                >
+                  Learn how to search, filter, edit, and organize your customer
+                  records.</span
+                >
+              </div>
+            </div>
+            <i class="fa-solid fa-arrow-right" style="font-size: 12px"></i>
+          </div>
+          <div
+            style="
+              display: flex;
+              flex-direction: row;
+              align-items: center;
+              justify-content: space-between;
+              cursor: pointer;
+            "
+            id="info3"
+            class="guida-item"
+            data-guida="products"
+            onclick="apriLaGuida('products')"
+          >
+            <div
+              style="
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                gap: 10px;
+              "
+            >
+              <div
+                class="profile"
+                style="width: 38px; height: 38px; border-radius: 12px"
+              >
+                <span
+                  ><i
+                    class="fa-regular fa-circle-question"
+                    style="color: #635bff; font-size: 18px"
+                  ></i
+                ></span>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: start;
+                  gap: 6px;
+                "
+              >
+                <span
+                  style="
+                    font-size: 14px;
+                    color: var(--text-color);
+                    font-weight: bold;
+                    align-items: start;
+                  "
+                  >Products and services</span
+                >
+                <span
+                  style="
+                    font-size: 11px;
+                    color: grey;
+                    font-weight: normal;
+                    align-items: start;
+                  "
+                >
+                  Create catalog items, manage pricing, and keep availability up
+                  to date.</span
+                >
+              </div>
+            </div>
+            <i class="fa-solid fa-arrow-right" style="font-size: 12px"></i>
+          </div>
+          <div
+            style="
+              display: flex;
+              flex-direction: row;
+              align-items: center;
+              justify-content: space-between;
+              cursor: pointer;
+            "
+            id="info4"
+            class="guida-item"
+            data-guida="orders"
+            onclick="apriLaGuida('orders')"
+          >
+            <div
+              style="
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                gap: 10px;
+              "
+            >
+              <div
+                class="profile"
+                style="width: 38px; height: 38px; border-radius: 12px"
+              >
+                <span
+                  ><i
+                    class="fa-regular fa-circle-question"
+                    style="color: #635bff; font-size: 18px"
+                  ></i
+                ></span>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: start;
+                  gap: 6px;
+                "
+              >
+                <span
+                  style="
+                    font-size: 14px;
+                    color: var(--text-color);
+                    font-weight: bold;
+                    align-items: start;
+                  "
+                  >Orders and appointments</span
+                >
+                <span
+                  style="
+                    font-size: 11px;
+                    color: grey;
+                    font-weight: normal;
+                    align-items: start;
+                  "
+                >
+                  Track transactions and schedule appointments from one
+                  place.</span
+                >
+              </div>
+            </div>
+            <i class="fa-solid fa-arrow-right" style="font-size: 12px"></i>
+          </div>
+          <div
+            style="
+              display: flex;
+              flex-direction: row;
+              align-items: center;
+              justify-content: space-between;
+              cursor: pointer;
+            "
+            id="info5"
+            class="guida-item"
+            data-guida="account"
+            onclick="apriLaGuida('account')"
+          >
+            <div
+              style="
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                gap: 10px;
+              "
+            >
+              <div
+                class="profile"
+                style="width: 38px; height: 38px; border-radius: 12px"
+              >
+                <span
+                  ><i
+                    class="fa-regular fa-circle-question"
+                    style="color: #635bff; font-size: 18px"
+                  ></i
+                ></span>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: start;
+                  gap: 6px;
+                "
+              >
+                <span
+                  style="
+                    font-size: 14px;
+                    color: var(--text-color);
+                    font-weight: bold;
+                    align-items: start;
+                  "
+                  >Account & Security</span
+                >
+                <span
+                  style="
+                    font-size: 11px;
+                    color: grey;
+                    font-weight: normal;
+                    align-items: start;
+                  "
+                >
+                  Create catalog items, manage pricing, and keep availability up
+                  to date.</span
+                >
+              </div>
+            </div>
+            <i class="fa-solid fa-arrow-right" style="font-size: 12px"></i>
+          </div>
+          <div
+            style="
+              display: flex;
+              flex-direction: row;
+              align-items: center;
+              justify-content: space-between;
+              cursor: pointer;
+            "
+            id="info6"
+            class="guida-item"
+            data-guida="backups"
+            onclick="apriLaGuida('backups')"
+          >
+            <div
+              style="
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                gap: 10px;
+              "
+            >
+              <div
+                class="profile"
+                style="width: 38px; height: 38px; border-radius: 12px"
+              >
+                <span
+                  ><i
+                    class="fa-regular fa-circle-question"
+                    style="color: #635bff; font-size: 18px"
+                  ></i
+                ></span>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: start;
+                  gap: 6px;
+                "
+              >
+                <span
+                  style="
+                    font-size: 14px;
+                    color: var(--text-color);
+                    font-weight: bold;
+                    align-items: start;
+                  "
+                  >Backups & Data</span
+                >
+                <span
+                  style="
+                    font-size: 11px;
+                    color: grey;
+                    font-weight: normal;
+                    align-items: start;
+                  "
+                >
+                  Create catalog items, manage pricing, and keep availability up
+                  to date.</span
+                >
+              </div>
+            </div>
+            <i class="fa-solid fa-arrow-right" style="font-size: 12px"></i>
+          </div>
+          <div
+            style="
+              display: flex;
+              flex-direction: row;
+              align-items: center;
+              justify-content: space-between;
+              cursor: pointer;
+            "
+            id="info7"
+            class="guida-item noLine"
+            data-guida="notifications"
+            onclick="apriLaGuida('notifications')"
+          >
+            <div
+              style="
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                gap: 10px;
+              "
+            >
+              <div
+                class="profile"
+                style="width: 38px; height: 38px; border-radius: 12px"
+              >
+                <span
+                  ><i
+                    class="fa-regular fa-circle-question"
+                    style="color: #635bff; font-size: 18px"
+                  ></i
+                ></span>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: start;
+                  gap: 6px;
+                "
+              >
+                <span
+                  style="
+                    font-size: 14px;
+                    color: var(--text-color);
+                    font-weight: bold;
+                    align-items: start;
+                  "
+                  >Notifications</span
+                >
+                <span
+                  style="
+                    font-size: 11px;
+                    color: grey;
+                    font-weight: normal;
+                    align-items: start;
+                  "
+                >
+                  Create catalog items, manage pricing, and keep availability up
+                  to date.</span
+                >
+              </div>
+            </div>
+            <i class="fa-solid fa-arrow-right" style="font-size: 12px"></i>
+          </div>
+          <div
+            id="nessun-risultato"
+            style="
+              display: none;
+              padding: 20px;
+              color: grey;
+              text-align: center;
+              font-size: 14px;
+            "
+          >
+            No guides found matching your search.
+          </div>
+        </div>
+        <div class="box-customers">
+          <div
+            style="
+              display: flex;
+              flex-direction: column;
+              gap: 5px;
+              width: 100%;
+              margin-bottom: 10px;
+            "
+          >
+            <span style="font-size: 14px; font-weight: bold"
+              >Frequently asked questions</span
+            >
+            <span style="font-size: 12px; color: grey"
+              >The essentials, at a glance.
+            </span>
+          </div>
+          <hr
+            style="
+              border: none;
+              height: 0.1px;
+              background-color: var(--border-secondary);
+            "
+          />
+          <div
+            class="faq-item"
+            onclick="toggleFaq(this)"
+            style="cursor: pointer"
+          >
+            <div
+              style="
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+                padding: 14px 0;
+              "
+              class="question"
+            >
+              <span style="font-size: 14px; font-weight: bold">
+                How do I add a new customer?
+              </span>
+              <span class="iconArrow" style="transition: transform 0.2s">
+                <i class="fa-solid fa-sort-down"></i>
+              </span>
+            </div>
+            <div class="response">
+              Open "Customers" from the sidebar and select the "Add customer"
+              button. Fill out the form, then save the record.
+            </div>
+            <hr
+              style="
+                border: none;
+                height: 0.1px;
+                background-color: var(--border-secondary);
+                margin: 0;
+              "
+            />
+          </div>
+          <div
+            class="faq-item"
+            onclick="toggleFaq(this)"
+            style="cursor: pointer"
+          >
+            <div
+              style="
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+              "
+              class="question"
+            >
+              <span
+                style="
+                  font-size: 14px;
+                  font-weight: bold;
+                  align-items: start;
+                  margin-top: 10px;
+                "
+                >How do I edit or delete a customer?</span
+              >
+              <span class="iconArrow"
+                ><i class="fa-solid fa-sort-down"> </i
+              ></span>
+            </div>
+            <span class="response"
+              >Open "Customers" from the sidebar and select the "Delete
+              customer" button. Fill out the email form, then click on "Delete"
+              button.</span
+            >
+            <hr
+              style="
+                border: none;
+                height: 0.1px;
+                background-color: var(--border-secondary);
+              "
+            />
+          </div>
+          <div
+            class="faq-item"
+            onclick="toggleFaq(this)"
+            style="cursor: pointer"
+          >
+            <div
+              style="
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+              "
+              class="question"
+            >
+              <span
+                style="
+                  font-size: 14px;
+                  font-weight: bold;
+                  align-items: start;
+                  margin-top: 10px;
+                "
+                >How do I create a new order?</span
+              >
+              <span class="iconArrow"
+                ><i class="fa-solid fa-sort-down"> </i
+              ></span>
+            </div>
+            <span class="response"
+              >Open "Orders" from the sidebar and select the
+              <b>"New Order"</b> button. You will be redirected to the page for
+              adding a new order: select products from the menu on the left by
+              clicking the "Add" button, choose the required quantity for each
+              product, and click the "<b>Complete Order</b>" button. The site
+              will display a summary page with the details of the newly
+              confirmed order, including the option
+              <b>to download the invoice.</b></span
+            >
+            <hr
+              style="
+                border: none;
+                height: 0.1px;
+                background-color: var(--border-secondary);
+              "
+            />
+          </div>
+          <div
+            class="faq-item"
+            onclick="toggleFaq(this)"
+            style="cursor: pointer"
+          >
+            <div
+              style="
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+              "
+              class="question"
+            >
+              <span
+                style="
+                  font-size: 14px;
+                  font-weight: bold;
+                  align-items: start;
+                  margin-top: 10px;
+                "
+                >How can I search and filter my data?</span
+              >
+              <span class="iconArrow"
+                ><i class="fa-solid fa-sort-down"> </i
+              ></span>
+            </div>
+            <span class="response"
+              >Use the <b>search bar </b>to find a specific record, or use the
+              <b>available filters</b> to narrow down the results. Depending on
+              the section, you can filter data by fields such as name, status,
+              date, or other available criteria.</span
+            >
+            <hr
+              style="
+                border: none;
+                height: 0.1px;
+                background-color: var(--border-secondary);
+              "
+            />
+          </div>
+          <div
+            class="faq-item"
+            onclick="toggleFaq(this)"
+            style="cursor: pointer"
+          >
+            <div
+              style="
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+              "
+              class="question"
+            >
+              <span
+                style="
+                  font-size: 14px;
+                  font-weight: bold;
+                  align-items: start;
+                  margin-top: 10px;
+                "
+                >How do I export my data?</span
+              >
+              <span class="iconArrow"
+                ><i class="fa-solid fa-sort-down"> </i
+              ></span>
+            </div>
+            <span class="response"
+              >Open "Settings" from the sidebar and scroll down to the "User
+              Profile" section. Click the <b>"Export my data" button</b>. The
+              file will be downloaded to your PC in <b>Excel format</b>.</span
+            >
+            <hr
+              style="
+                border: none;
+                height: 0.1px;
+                background-color: var(--border-secondary);
+              "
+            />
+          </div>
+          <div
+            class="faq-item"
+            onclick="toggleFaq(this)"
+            style="cursor: pointer"
+          >
+            <div
+              style="
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+              "
+              class="question"
+            >
+              <span
+                style="
+                  font-size: 14px;
+                  font-weight: bold;
+                  align-items: start;
+                  margin-top: 10px;
+                "
+                >How do I change my password?</span
+              >
+              <span class="iconArrow"
+                ><i class="fa-solid fa-sort-down"> </i
+              ></span>
+            </div>
+            <span class="response"
+              >Open "Settings" from the sidebar and scroll down to the "User
+              Profile" section. Click the <b>"Change password" button</b>. You
+              will be redirected to the password reset page. From there, follow
+              the instructions.</span
+            >
+            <hr
+              style="
+                border: none;
+                height: 0.1px;
+                background-color: var(--border-secondary);
+              "
+            />
+          </div>
+          <div
+            class="faq-item"
+            onclick="toggleFaq(this)"
+            style="cursor: pointer"
+          >
+            <div
+              style="
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+              "
+              class="question"
+            >
+              <span
+                style="
+                  font-size: 14px;
+                  font-weight: bold;
+                  align-items: start;
+                  margin-top: 10px;
+                "
+                >How do I enable or disable two-factor authentication?</span
+              >
+              <span class="iconArrow"
+                ><i class="fa-solid fa-sort-down"> </i
+              ></span>
+            </div>
+            <span class="response"
+              >Open "Settings" from the sidebar and scroll down to the
+              "Security" section. Click the
+              <b>"Two-factor authentication" switch.</b> Follow the on-screen
+              instructions.</span
+            >
+            <hr
+              style="
+                border: none;
+                height: 0.1px;
+                background-color: var(--border-secondary);
+              "
+            />
+          </div>
+          <div
+            class="faq-item"
+            onclick="toggleFaq(this)"
+            style="cursor: pointer"
+          >
+            <div
+              style="
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+              "
+              class="question"
+            >
+              <span
+                style="
+                  font-size: 14px;
+                  font-weight: bold;
+                  align-items: start;
+                  margin-top: 10px;
+                "
+                >How do notifications work?</span
+              >
+              <span class="iconArrow"
+                ><i class="fa-solid fa-sort-down"> </i
+              ></span>
+            </div>
+            <span class="response"
+              >You can choose which notifications to receive by going to the
+              "Settings" page via the side menu and scrolling down to the
+              <b>"Notifications" section.</b> There, you can select whether or
+              not to receive email notifications. Website and push notifications
+              are enabled by default. You can choose which events trigger
+              notifications—such as orders, new users or customers, or account
+              changes.</span
+            >
+          </div>
+          <div
+            id="nessun-risultato-faq"
+            style="
+              display: none;
+              padding: 20px;
+              color: grey;
+              text-align: center;
+              font-size: 14px;
+            "
+          >
+            No questions found.
+          </div>
+        </div>
+      </div>
+      <div
+        class="box-customers"
+        style="margin-left: 20px; width: 97.5%; margin-bottom: 30px"
+      >
+        <div
+          style="
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+          "
+        >
+          <div
+            style="
+              display: flex;
+              flex-direction: row;
+              align-items: center;
+              gap: 10px;
+            "
+          >
+            <div
+              class="profile"
+              style="width: 38px; height: 38px; border-radius: 12px"
+            >
+              <span>
+                <i
+                  class="fa-regular fa-bell"
+                  style="color: #635bff; font-size: 18px"
+                ></i
+              ></span>
+            </div>
+            <div
+              style="
+                display: flex;
+                flex-direction: column;
+                align-items: start;
+                gap: 6px;
+              "
+            >
+              <span
+                style="
+                  font-size: 14px;
+                  color: var(--text-color);
+                  font-weight: bold;
+                  align-items: start;
+                "
+                >Still need help?</span
+              >
+              <span
+                style="
+                  font-size: 11px;
+                  color: grey;
+                  font-weight: normal;
+                  align-items: start;
+                "
+              >
+                Our support team is here to help with anything else.
+              </span>
+            </div>
+          </div>
+          <a
+            id="add-customer"
+            style="width: 165px; text-decoration: none"
+            href="mailto: emanuele.nassisi007@gmail.com"
+          >
+            Contact support
+          </a>
+        </div>
+      </div>
+    </div>
+    <div id="dialogOverlay" class="overlay"></div>
+    <div
+      id="viewGuide"
+      class="box2fa"
+      style="
+        display: none;
+        border-radius: 16px;
+        box-shadow:
+          0 20px 25px -5px rgba(0, 0, 0, 0.1),
+          0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        padding: 28px;
+        width: 100%;
+        max-width: 50%;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1000;
+        max-height: 85vh;
+        overflow-y: auto;
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+      "
+    >
+      <div
+        style="
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 8px;
+        "
+      >
+        <span
+          style="
+            font-size: 11px;
+            font-weight: bold;
+            color: #635bff;
+            letter-spacing: 0.2em;
+          "
+        >
+          NEXA GUIDE
+        </span>
+        <button
+          onclick="chiudiIlPopup()"
+          style="
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #9ca3af;
+            cursor: pointer;
+            line-height: 1;
+          "
+        >
+          &times;
+        </button>
+      </div>
+
+      <!-- Titolo Principale (DINAMICO) -->
+      <div style="margin-bottom: 20px">
+        <h2
+          id="titolo-guida"
+          style="margin: 0; font-size: 22px; font-weight: 600"
+        >
+          Getting started with Nexa
+        </h2>
+      </div>
+
+      <!-- Contenuto del Testo (DINAMICO) -->
+      <div
+        id="contenuto-guida"
+        style="
+          font-size: 14px;
+          color: grey;
+          line-height: 1.6;
+          margin-bottom: 24px;
+        "
+      >
+        <!-- Il testo iniziale verrà rimpiazzato via JavaScript al click -->
+      </div>
+
+      <div
+        style="
+          display: flex;
+          justify-content: flex-end;
+          border-top: 1px solid #f3f4f6;
+          padding-top: 16px;
+        "
+      >
+        <button
+          id="btn-cancel-notifyEmail"
+          onclick="chiudiIlPopup()"
+          style="
+            background: #635bff;
+            color: #ffffff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+          "
+        >
+          Chiudi
+        </button>
+      </div>
+    </div>
+    <script src="../public/config.js"></script>
+    <script src="http://localhost:3000/socket.io/socket.io.js"></script>
+    <script src="helpPage_script.js"></script>
+  </body>
+</html>

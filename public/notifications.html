@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Notification</title>
+    <link rel="stylesheet" href="style.css" />
+    <script>
+      const savedTheme = localStorage.getItem("theme");
+
+      if (savedTheme === "dark") {
+        document.documentElement.classList.add("dark-mode");
+      }
+    </script>
+    <script
+      src="https://kit.fontawesome.com/be6af1d745.js"
+      crossorigin="anonymous"
+    ></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <style>
+      .overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+      }
+      .row {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 20px;
+      }
+    </style>
+  </head>
+  <body style="flex-direction: row; align-items: start; justify-content: start">
+    <div
+      class="menu"
+      style="
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        box-sizing: border-box;
+        padding-bottom: 20px;
+      "
+    >
+      <a
+        style="
+          display: flex;
+          flex-direction: row;
+          gap: 10px;
+          align-items: center;
+          margin-bottom: 30px;
+          text-decoration: none;
+        "
+        href="dashboard.html"
+      >
+        <div style="display: flex; flex-direction: column">
+          <div class="logo"></div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 5px">
+          <span class="title" style="font-size: 14px; font-weight: bold"
+            >Nexa</span
+          >
+          <span
+            class="subtitle-form"
+            style="font-size: 10px; text-decoration: none"
+            >Business Management System</span
+          >
+        </div>
+      </a>
+      <div
+        style="
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          flex-grow: 1;
+        "
+      >
+        <div style="display: flex; flex-direction: column">
+          <a class="link" href="dashboard.html">
+            <i class="fa-solid fa-chart-bar" style="color: #686868"></i>
+            <span>Dashboard</span>
+          </a>
+          <a class="link" href="customers.html">
+            <i class="fa-solid fa-users" style="color: #686868"></i>
+            <span>Customers</span>
+          </a>
+          <a class="link" href="products.html">
+            <i class="fa-solid fa-box-open" style="color: #686868"></i>
+            <span>Products & Services</span>
+          </a>
+          <a class="link" href="orders.html">
+            <i class="fa-solid fa-cart-shopping" style="color: #686868"></i>
+            <span>Orders</span>
+          </a>
+          <a class="link" href="appointments.html">
+            <i class="fa-solid fa-calendar" style="color: #686868"></i>
+            <span>Appointments</span>
+          </a>
+          <a class="link" href="users.html">
+            <i class="fa-regular fa-user" style="color: #686868"></i>
+            <span>Users</span>
+          </a>
+        </div>
+
+        <div style="display: flex; flex-direction: column">
+          <hr
+            style="
+              border: none;
+              height: 1px;
+              background-color: rgb(225, 225, 230);
+              margin: 10px 0;
+            "
+          />
+          <a class="link" id="active" href="notifications.html">
+            <i class="fa-solid fa-bell" style="color: #686868"></i>
+            <span>Notifications</span>
+          </a>
+          <a class="link" href="settings.html">
+            <i class="fa-solid fa-gear" style="color: #686868"></i>
+            <span>Settings</span>
+          </a>
+          <a class="link" href="help.html">
+            <i class="fa-solid fa-circle-question" style="color: #686868"></i>
+            <span>Help</span>
+          </a>
+          <a class="link" href="logout.html">
+            <i
+              class="fa-solid fa-right-from-bracket"
+              style="color: #686868"
+            ></i>
+            <span>Logout</span>
+          </a>
+        </div>
+      </div>
+    </div>
+    <div class="home">
+      <div
+        style="
+          padding: 20px 30px;
+          display: flex;
+          justify-content: space-between;
+          border-bottom: #686868;
+        "
+      >
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <span id="current_section"></span>
+          <span id="navigation"></span>
+        </div>
+        <div
+          style="
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 10px;
+          "
+        >
+          <div class="theme-toggle" id="themeToggle" style="cursor: pointer">
+            <i class="fa-regular fa-moon" style="color: var(--text-color)"></i>
+          </div>
+          <div class="notification-container">
+            <button id="notification-btn" class="bell-button">
+              <i
+                class="fa-regular fa-bell"
+                style="color: var(--text-color)"
+              ></i>
+              <span id="notification-badge" class="badge">0</span>
+            </button>
+
+            <div id="notification-dropdown" class="notification-dropdown">
+              <div class="dropdown-header">
+                <span style="font-size: 14px; font-weight: bold"
+                  >Notifiche</span
+                >
+                <span
+                  style="font-size: 12px; font-weight: normal; cursor: pointer"
+                  id="readAll"
+                  >Leggi tutto</span
+                >
+              </div>
+              <ul id="notification-list" class="dropdown-list">
+                <li class="empty-message">Nessuna nuova notifica</li>
+              </ul>
+            </div>
+          </div>
+          <div
+            style="
+              display: flex;
+              flex-direction: row;
+              align-items: center;
+              gap: 10px;
+            "
+          >
+            <div style="margin-left: 30px">
+              <span id="nameComplete"></span>
+              <span id="surnameComplete"></span>
+            </div>
+            <a class="profile" href="settings.html#profile">
+              <img
+                id="avatar-img"
+                src=""
+                alt="Avatar"
+                style="
+                  display: none;
+                  width: 100%;
+                  height: 100%;
+                  object-fit: cover;
+                  object-position: center;
+                  border-radius: 50%;
+                "
+              />
+              <span id="name"></span>
+              <span id="surname"></span>
+            </a>
+          </div>
+        </div>
+      </div>
+      <hr
+        style="
+          border: none;
+          height: 0.1px;
+          background-color: rgb(225, 225, 230);
+        "
+      />
+      <div
+        class="container-error"
+        style="width: 98%; margin: 20px; margin-bottom: 0px"
+      >
+        <i class="fa-solid fa-lock" style="size: 25px"></i>
+        <span id="error-form"></span>
+      </div>
+      <div class="customer">
+        <div
+          style="
+            padding: 40px, 0px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: #686868;
+          "
+        >
+          <div style="display: flex; flex-direction: column; gap: 10px">
+            <span style="font-size: 25px">Notifications</span>
+            <span style="font-size: 14px; color: grey"
+              >See all the notifications</span
+            >
+          </div>
+        </div>
+        <div
+          style="
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            margin-top: 25px;
+            width: 100%;
+          "
+        >
+          <div class="search-customer">
+            <i
+              class="fa-solid fa-magnifying-glass"
+              style="color: rgb(168, 166, 166)"
+            ></i>
+            <input
+              type="search"
+              placeholder="Search notification..."
+              id="search-input"
+            />
+          </div>
+          <button id="clear-filters">Clear Filters</button>
+          <button id="readAllNotif">Read All</button>
+        </div>
+        <div class="box-customers">
+          <div
+            style="
+              display: flex;
+              flex-direction: row;
+              justify-content: space-between;
+              align-items: center;
+            "
+          >
+            <span style="font-size: 14px; font-weight: bold"
+              >All Notifications
+            </span>
+            <a
+              style="
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                gap: 10px;
+                text-decoration: none;
+              "
+              href="orders.html"
+            >
+            </a>
+          </div>
+          <hr
+            style="
+              border: none;
+              height: 0.1px;
+              background-color: rgb(225, 225, 230);
+            "
+          />
+          <div
+            style="
+              display: flex;
+              flex-direction: row;
+              justify-content: space-between;
+              align-items: center;
+              margin: 1px 10px;
+            "
+          >
+            <span style="font-size: 12px; color: grey">ID</span>
+            <span style="font-size: 12px; color: grey">Type</span>
+            <span style="font-size: 12px; color: grey">Title</span>
+            <span style="font-size: 12px; color: grey">Message</span>
+            <span style="font-size: 12px; color: grey">Date</span>
+            <span style="font-size: 12px; color: grey">Elimina</span>
+            <span style="font-size: 12px; color: grey">Vedi altro</span>
+          </div>
+          <hr
+            style="
+              border: none;
+              height: 0.1px;
+              background-color: rgb(225, 225, 230);
+            "
+          />
+          <div id="notifications" class="protected-data"></div>
+        </div>
+        <div id="pagination"></div>
+      </div>
+    </div>
+    <div id="dialogOverlay" class="overlay"></div>
+    <div
+      id="viewNotify"
+      class="box2fa"
+      style="
+        display: none; /* Inizialmente nascosto */
+        border-radius: 16px;
+        box-shadow:
+          0 20px 25px -5px rgba(0, 0, 0, 0.1),
+          0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        padding: 24px;
+        width: 100%;
+        max-width: 440px;
+        font-family:
+          -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto,
+          sans-serif;
+        position: fixed; /* Per centrarlo sopra l'overlay */
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1000;
+      "
+    >
+      <div
+        style="
+          display: flex;
+          justify-content: space-between;
+          align-items: start;
+          margin-bottom: 16px;
+        "
+      >
+        <div style="display: flex; align-items: center; gap: 12px">
+          <div
+            style="
+              width: 40px;
+              height: 40px;
+              border-radius: 10px;
+              background: #e6f4ea;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            "
+          >
+            <svg
+              xmlns="http://w3.org"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#10B981"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
+          </div>
+          <div>
+            <span
+              id="typeNotifica"
+              style="
+                font-size: 13px;
+                font-weight: 600;
+                color: grey;
+                display: block;
+                text-transform: capitalize;
+              "
+            ></span>
+            <span
+              id="idNotifica"
+              style="font-size: 11px; color: #6b7280; font-weight: 500"
+            ></span>
+          </div>
+        </div>
+        <button
+          onclick="chiudiIlPopup()"
+          style="
+            background: none;
+            border: none;
+            font-size: 22px;
+            color: #9ca3af;
+            cursor: pointer;
+          "
+        >
+          &times;
+        </button>
+      </div>
+
+      <div style="margin-bottom: 24px">
+        <h3
+          id="titleNotifica"
+          style="
+            font-size: 18px;
+            font-weight: 700;
+            margin: 0 0 8px 0;
+            line-height: 1.3;
+          "
+        ></h3>
+        <p
+          id="messageNotifica"
+          style="font-size: 14px; color: grey; line-height: 1.5; margin: 0"
+        ></p>
+      </div>
+
+      <div
+        style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          border-top: 1px solid #f3f4f6;
+          padding-top: 16px;
+        "
+      >
+        <span id="dateNotifica" style="font-size: 12px; color: #9ca3af"></span>
+        <div class="row">
+          <button
+            id="btn-read-notifyEmail"
+            style="
+              padding: 8px 16px;
+              border-radius: 8px;
+              font-size: 14px;
+              font-weight: 600;
+              cursor: pointer;
+            "
+          >
+            Leggi
+          </button>
+          <button
+            id="btn-cancel-notifyEmail"
+            onclick="chiudiIlPopup()"
+            style="
+              background: #635bff; /* Usato il tuo colore viola del brand */
+              color: #ffffff;
+              border: none;
+              padding: 8px 16px;
+              border-radius: 8px;
+              font-size: 14px;
+              font-weight: 600;
+              cursor: pointer;
+            "
+          >
+            Chiudi
+          </button>
+        </div>
+      </div>
+    </div>
+    <script src="../public/config.js"></script>
+    <script src="http://localhost:3000/socket.io/socket.io.js"></script>
+    <script src="notifications_script.js"></script>
+  </body>
+</html>

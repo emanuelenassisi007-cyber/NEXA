@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+    <script
+      src="https://kit.fontawesome.com/be6af1d745.js"
+      crossorigin="anonymous"
+    ></script>
+    <title>Login with 2Fa</title>
+    <style>
+      .subtitle-form {
+        font-weight: normal;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 11px;
+        color: grey;
+      }
+      .password-container {
+        position: relative;
+        width: 100%;
+      }
+      .password-container input {
+        width: 100%;
+        padding: 10px;
+        padding-right: 40px; /* Spazio per non far sovrapporre il testo all'icona */
+        box-sizing: border-box;
+      }
+      .toggle-btn {
+        position: absolute;
+        right: 5px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        padding: 8px;
+        cursor: pointer;
+        color: #666;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .spinner {
+        display: inline-block;
+        width: 25px;
+        height: 25px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: var(--text-color);
+        animation: spin 0.8s linear infinite;
+        margin-top: 10px;
+        margin: 0 auto;
+        vertical-align: middle;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container-error">
+      <img
+        src="images/circle-exclamation-solid.png"
+        alt="Warning"
+        width="25px"
+      />
+      <span id="error-text"></span>
+    </div>
+    <div class="container">
+      <div
+        style="
+          display: flex;
+          flex-direction: row;
+          gap: 10px;
+          align-items: center;
+          margin-bottom: 30px;
+        "
+      >
+        <div style="display: flex; flex-direction: column">
+          <div class="logo"></div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 5px">
+          <span class="title">Nexa</span>
+          <span class="subtitle-form">Business Management System</span>
+        </div>
+      </div>
+      <span
+        class="title"
+        style="font-size: 25px; font-weight: normal; margin-bottom: 10px"
+        >Verifica a due fattori</span
+      >
+      <span class="subtitle" style="font-weight: normal"
+        >Apri Microsoft Authenticator e inserisci il codice a 6 cifre:</span
+      >
+      <form id="form" style="margin-bottom: 10px">
+        <div id="2fa-section" style="display: block; text-align: center">
+          <input
+            type="text"
+            id="login-2fa-code"
+            placeholder="000000"
+            maxlength="6"
+            style="letter-spacing: 3px; font-size: 20px; text-align: center"
+          />
+        </div>
+      </form>
+      <div class="spinner" style="display: none"></div>
+      <button
+        type="button"
+        id="btn-submit-2fa"
+        style="margin-top: 10px"
+        class="login"
+      >
+        Verifica e Accedi
+      </button>
+    </div>
+  </body>
+  <script src="../public/config.js"></script>
+  <script src="login2FA_script.js"></script>
+</html>

@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+    <script
+      src="https://kit.fontawesome.com/be6af1d745.js"
+      crossorigin="anonymous"
+    ></script>
+    <title>Logout</title>
+    <style>
+      .subtitle-form {
+        font-weight: normal;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 11px;
+        color: grey;
+      }
+      .password-container {
+        position: relative;
+        width: 100%;
+      }
+      .password-container input {
+        width: 100%;
+        padding: 10px;
+        padding-right: 40px; /* Spazio per non far sovrapporre il testo all'icona */
+        box-sizing: border-box;
+      }
+      .toggle-btn {
+        position: absolute;
+        right: 5px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        padding: 8px;
+        cursor: pointer;
+        color: #666;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container-error">
+      <img
+        src="images/circle-exclamation-solid.png"
+        alt="Warning"
+        width="25px"
+      />
+      <span id="error-text"></span>
+    </div>
+    <div class="container">
+      <div
+        style="
+          display: flex;
+          flex-direction: row;
+          gap: 10px;
+          align-items: center;
+          margin-bottom: 30px;
+        "
+      >
+        <div style="display: flex; flex-direction: column">
+          <div class="logo"></div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 5px">
+          <span class="title">Nexa</span>
+          <span class="subtitle-form">Business Management System</span>
+        </div>
+      </div>
+      <span
+        class="title"
+        style="font-size: 25px; font-weight: normal; margin-bottom: 10px"
+        >Are you sure you want to exit?</span
+      >
+      <span class="subtitle" style="font-weight: normal"
+        >Enter your password before logging out.</span
+      >
+      <form id="form">
+        <div id="credentials-section">
+          <span class="subtitle-form">Password</span>
+          <div class="password-container">
+            <input
+              type="password"
+              required
+              placeholder="•••••••"
+              id="password"
+            />
+            <button type="button" id="togglePasswordBtn" class="toggle-btn">
+              <i class="fa-regular fa-eye-slash" id="eyeIcon"></i>
+            </button>
+          </div>
+          <span id="password-error" style="color: red; display: none"></span>
+        </div>
+        <div id="2fa-section" style="display: none; text-align: center">
+          <span style="font-size: 16px; font-weight: bold"
+            >Verifica a due fattori</span
+          >
+          <p style="font-size: 14px; font-weight: normal">
+            Apri Microsoft Authenticator e inserisci il codice a 6 cifre:
+          </p>
+          <input
+            type="text"
+            id="login-2fa-code"
+            placeholder="000000"
+            maxlength="6"
+            style="letter-spacing: 3px; font-size: 20px; text-align: center"
+          />
+          <button type="button" id="btn-submit-2fa" style="margin-top: 10px">
+            Verifica e Accedi
+          </button>
+        </div>
+      </form>
+      <button class="login" id="logout">Logout</button>
+    </div>
+  </body>
+  <script src="../public/config.js"></script>
+  <script src="logout_script.js"></script>
+</html>
