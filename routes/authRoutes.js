@@ -23,16 +23,6 @@ const authenticateToken = require("../middleware/authMiddleware");
 const requireAdmin = require("../middleware/requireAdmin");
 const adminValidator = require("../middleware/adminValidator");
 
-const loginLimiter = rateLimit({
-  windowMs: 10 * 60 * 1000,
-  limit: 50,
-  handler: (req, res) => {
-    res.status(429).json({
-      error: "Troppi tentativi, riprova più tardi.",
-    });
-  },
-});
-
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, path.join(__dirname, "../uploads"));

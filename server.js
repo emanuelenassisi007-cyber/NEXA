@@ -11,41 +11,49 @@ const rateLimit = require("express-rate-limit");
 const { Server } = require("socket.io");
 
 const app = express();
+app.set("trust proxy", 1);
 const server = http.createServer(app);
 app.use(express.json());
 const allowedOrigins = [process.env.CLIENT_URL || "http://localhost:5500"];
+const corsOptions = (req, callback) => {
+  const origin = req.header("Origin");
+  const sameHost = origin && origin.endsWith("//" + req.header("Host"));
+  const allowed =
+    !origin ||
+    sameHost ||
+    allowedOrigins.includes(origin) ||
+    process.env.NODE_ENV !== "production";
 
-const corsOptions = {
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true);
-    if (
-      allowedOrigins.indexOf(origin) !== -1 ||
-      process.env.NODE_ENV !== "production"
-    ) {
-      callback(null, true);
-    } else {
-      callback(new Error("Bloccato da CORS"));
-    }
-  },
-  credentials: true,
-  methods: ["GET", "POST", "PATCH", "DELETE"],
+  callback(null, {
+    origin: allowed,
+    credentials: true,
+    methods: ["GET", "POST", "PATCH", "DELETE"],
+  });
 };
 
 const io = new Server(server, {
-  cors: corsOptions,
+  cors: { origin: true, credentials: true },
 });
 
 app.use(cors(corsOptions));
 
-/*const limiter = rateLimit({
+const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 100,
+  limit: 1000,
   standardHeaders: "draft-8",
   legacyHeaders: false,
-});*/
+});
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  message: { message: "Troppi tentativi, riprova tra qualche minuto." },
+});
 
 app.use(helmet());
-//app.use(limiter);
+app.use("/api", limiter);
+app.use("/api/auth/login", loginLimiter);
 app.use(cookieParser());
 app.set("socket.io", io);
 
