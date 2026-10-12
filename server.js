@@ -51,7 +51,38 @@ const loginLimiter = rateLimit({
   message: { message: "Troppi tentativi, riprova tra qualche minuto." },
 });
 
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: [
+          "'self'",
+          "'unsafe-inline'",
+          "https://kit.fontawesome.com",
+          "https://cdn.jsdelivr.net",
+          "https://cdnjs.cloudflare.com",
+        ],
+        scriptSrcAttr: ["'unsafe-inline'"],
+        styleSrc: [
+          "'self'",
+          "'unsafe-inline'",
+          "https://fonts.googleapis.com",
+          "https://ka-f.fontawesome.com",
+          "https://cdnjs.cloudflare.com",
+        ],
+        fontSrc: [
+          "'self'",
+          "data:",
+          "https://fonts.gstatic.com",
+          "https://ka-f.fontawesome.com",
+        ],
+        imgSrc: ["'self'", "data:", "blob:"],
+        connectSrc: ["'self'", "wss:", "https://ka-f.fontawesome.com"],
+      },
+    },
+  }),
+);
 app.use("/api", limiter);
 app.use("/api/auth/login", loginLimiter);
 app.use(cookieParser());
@@ -65,7 +96,7 @@ app.use(
   },
   express.static(path.join(__dirname, "uploads")),
 );
-app.use(express.static(path.join(__dirname, "public")));
+app.use("/public", express.static(path.join(__dirname, "public")));
 app.get("/", (req, res) => {
   res.redirect("/login.html");
 });
