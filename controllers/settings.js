@@ -24,9 +24,10 @@ const { stdout, stderr } = require("process");
 const JWT_SECRET = process.env.JWT_SECRET;
 const createNotification = require("../config/notification");
 
-const backupDir = path.join(__dirname, "..", "backups", "auto");
-if (!fs.existsSync(backupDir)) {
-  fs.mkdirSync(backupDir, { recursive: true });
+try {
+  fs.mkdirSync(path.join(getBackupRoot(), "auto"), { recursive: true });
+} catch (err) {
+  console.error("Impossibile creare la cartella dei backup:", err.message);
 }
 
 exports.getStorage = async (req, res) => {
@@ -38,7 +39,7 @@ exports.getStorage = async (req, res) => {
           4
         ) AS total_mb
       FROM information_schema.tables
-      WHERE table_schema = 'nexa_db';
+      WHERE table_schema = DATABASE();
     `);
 
     const storage = rows[0].total_mb || 0;
@@ -57,8 +58,8 @@ exports.getStorage = async (req, res) => {
 
 exports.getRecords = async (req, res) => {
   try {
-    const folderAuto = path.join(__dirname, "..", "backups", "auto");
-    const folderManual = path.join(__dirname, "..", "backups");
+    const folderAuto = path.join(getBackupRoot(), "auto");
+    const folderManual = getBackupRoot();
 
     if (!fs.existsSync(folderAuto))
       fs.mkdirSync(folderAuto, { recursive: true });
@@ -236,39 +237,43 @@ exports.autoBackup = async (req, res) => {
   }
 };
 
-cron.schedule("0 3 * * *", async () => {
-  try {
-    const [rows] = await db.query(
-      "SELECT id FROM users WHERE is_auto_backup_enabled = 1 LIMIT 1",
-    );
-    if (rows.length === 0) return;
-
-    const dir = path.join(getBackupRoot(), "auto");
-    fs.mkdirSync(dir, { recursive: true });
-
-    const fileName = `auto-backup-${new Date().toISOString().slice(0, 10)}-${Date.now()}.sql`;
-    const outputPath = path.join(dir, fileName);
-    const now = new Date();
-
+cron.schedule(
+  "0 3 * * *",
+  async () => {
     try {
-      await dumpToFile(db, outputPath);
-    } catch (err) {
-      console.error("❌ Errore durante il backup automatico:", err.message);
-      if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
-      return;
+      const [rows] = await db.query(
+        "SELECT id FROM users WHERE is_auto_backup_enabled = 1 LIMIT 1",
+      );
+      if (rows.length === 0) return;
+
+      const dir = path.join(getBackupRoot(), "auto");
+      fs.mkdirSync(dir, { recursive: true });
+
+      const fileName = `auto-backup-${new Date().toISOString().slice(0, 10)}-${Date.now()}.sql`;
+      const outputPath = path.join(dir, fileName);
+      const now = new Date();
+
+      try {
+        await dumpToFile(db, outputPath);
+      } catch (err) {
+        console.error("❌ Errore durante il backup automatico:", err.message);
+        if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
+        return;
+      }
+
+      const stats = fs.statSync(outputPath);
+      const sizeInMB = (stats.size / (1024 * 1024)).toFixed(2);
+
+      await db.execute(
+        "INSERT INTO backups (filename, file_size, create_at, backup_type) VALUES (?, ?, ?, ?)",
+        [fileName, sizeInMB, now, "automatic"],
+      );
+    } catch (error) {
+      console.error("❌ Errore nel controllo del Cron Job:", error);
     }
-
-    const stats = fs.statSync(outputPath);
-    const sizeInMB = (stats.size / (1024 * 1024)).toFixed(2);
-
-    await db.execute(
-      "INSERT INTO backups (filename, file_size, create_at, backup_type) VALUES (?, ?, ?, ?)",
-      [fileName, sizeInMB, now, "automatic"],
-    );
-  } catch (error) {
-    console.error("❌ Errore nel controllo del Cron Job:", error);
-  }
-});
+  },
+  { timezone: "Europe/Rome" },
+);
 exports.lastBackup = async (req, res) => {
   try {
     const [rows] = await db.query(
