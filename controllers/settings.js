@@ -619,7 +619,7 @@ exports.getBackups = async (req, res) => {
         OR backups.file_size LIKE ?
         OR backups.backup_type LIKE ?
       )
-      GROUP BY backups.id DESC
+      ORDER BY backups.id DESC
       LIMIT ? OFFSET ?;
     `;
 
@@ -1020,16 +1020,16 @@ exports.readAllNotifications = async (req, res) => {
 };
 
 exports.getAllNotifications = async (req, res) => {
-  const idUser = Number(req.query.id);
+  const idUser = req.user.id;
   const search = req.query.search || "";
-  const page = Number(req.query.page) || 1;
+  const page = Math.max(Number(req.query.page) || 1, 1);
   const limit = 10;
   const offset = (page - 1) * limit;
   const value = `%${search}%`;
 
   try {
     const query = `
-      SELECT 
+      SELECT
         notifications.id AS id,
         notifications.type AS type,
         notifications.title AS title,
@@ -1037,38 +1037,57 @@ exports.getAllNotifications = async (req, res) => {
         notifications.is_read AS is_read,
         notifications.created_at AS date
       FROM notifications
-      WHERE (
-        notifications.type LIKE ?
-        OR notifications.title LIKE ?
-        OR notifications.message LIKE ?
-        OR  notifications.created_at LIKE ?
-      ) AND notifications.user_id = ?
-      GROUP BY notifications.id DESC
-      LIMIT ? OFFSET ?;
+      WHERE notifications.user_id = ?
+        AND (
+          notifications.type LIKE ?
+          OR notifications.title LIKE ?
+          OR notifications.message LIKE ?
+          OR notifications.created_at LIKE ?
+        )
+      ORDER BY notifications.id DESC
+      LIMIT ? OFFSET ?
     `;
 
-    const queryParams = [value, value, value, value, idUser, limit, offset];
-    const [getNotifications] = await db.execute(query, queryParams);
+    const [getNotifications] = await db.execute(query, [
+      idUser,
+      value,
+      value,
+      value,
+      value,
+      limit,
+      offset,
+    ]);
 
     const statsQuery = `
       SELECT COUNT(*) AS totalNotifications
       FROM notifications
-      WHERE type LIKE ?
+      WHERE notifications.user_id = ?
+        AND (
+          notifications.type LIKE ?
+          OR notifications.title LIKE ?
+          OR notifications.message LIKE ?
+          OR notifications.created_at LIKE ?
+        )
     `;
 
-    const statsParams = [value];
-    const [statsResult] = await db.execute(statsQuery, statsParams);
+    const [statsResult] = await db.execute(statsQuery, [
+      idUser,
+      value,
+      value,
+      value,
+      value,
+    ]);
     const totalNotifications = statsResult[0]?.totalNotifications || 0;
     const totalPages = Math.ceil(totalNotifications / limit);
 
     res.json({
       notifications: getNotifications,
       currentPage: page,
-      totalPages: totalPages,
-      totalNotifications: totalNotifications,
+      totalPages,
+      totalNotifications,
     });
   } catch (error) {
-    console.error("Errore get backups:", error);
+    console.error("Errore get notifications:", error);
     res.status(500).json({ error: "Errore interno del server" });
   }
 };

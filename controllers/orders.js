@@ -33,7 +33,7 @@ exports.getOrders = async (req, res) => {
         OR orders.id LIKE ?
       )
       AND orders.status LIKE ?
-      GROUP BY orders.id DESC
+      ORDER BY orders.id DESC
       LIMIT ? OFFSET ?;
     `;
 
