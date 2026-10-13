@@ -50,19 +50,39 @@ const sendEmail = async ({
   text,
 }) => {
   console.log("MAIL_FROM letto:", JSON.stringify(process.env.MAIL_FROM));
-  const res = await fetch("https://api.resend.com/emails", {
+
+  // Estrae l'email pulita da MAIL_FROM (gestisce sia "Nome <email@dominio.it>" che "email@dominio.it")
+  let senderEmail = process.env.MAIL_FROM || "noreply@tuodominio.it";
+  let senderName = "Nexa";
+
+  if (senderEmail.includes("<")) {
+    const match = senderEmail.match(/^(.*?)\s*<(.+?)>$/);
+    if (match) {
+      senderName = match[1].trim();
+      senderEmail = match[2].trim();
+    }
+  }
+
+  // Prepara i destinatari per il formato richiesto da Brevo (array di oggetti { email, name })
+  const recipients = (Array.isArray(to) ? to : [to]).map((email) => ({
+    email,
+  }));
+
+  const res = await fetch("https://api.brevo.com/v3/smtp/email", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+      "api-key": process.env.RESEND_API_KEY, // Manteniamo la variabile esistente su Railway dove hai incollato la chiave di Brevo
       "Content-Type": "application/json",
+      Accept: "application/json",
     },
     body: JSON.stringify({
-      from: process.env.MAIL_FROM.includes("<")
-        ? process.env.MAIL_FROM
-        : `Nexa <${process.env.MAIL_FROM}>`,
-      to: Array.isArray(to) ? to : [to],
-      subject,
-      html:
+      sender: {
+        name: senderName,
+        email: senderEmail,
+      },
+      to: recipients,
+      subject: subject,
+      htmlContent:
         html ||
         buildNotificationHtml({
           subject,
@@ -71,7 +91,7 @@ const sendEmail = async ({
           actionUrl,
           actionText,
         }),
-      text: text || message || title || subject,
+      textContent: text || message || title || subject,
     }),
     signal: AbortSignal.timeout(15000),
   });
