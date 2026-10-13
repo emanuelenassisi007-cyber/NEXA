@@ -1,15 +1,3 @@
-const nodemailer = require("nodemailer");
-
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST,
-  port: parseInt(process.env.EMAIL_PORT),
-  secure: process.env.EMAIL_PORT === "465",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
-
 const buildNotificationHtml = ({
   subject,
   title,
@@ -58,22 +46,40 @@ const sendEmail = async ({
   message,
   actionUrl,
   actionText,
-  html, // <-- nuovo
-  text, // <-- nuovo
+  html,
+  text,
 }) => {
-  const mailOptions = {
-    from: `"Nexa" <${process.env.EMAIL_USER}>`,
-    to,
-    subject,
-    // Se passi un html custom lo usa, altrimenti usa il template di notifica
-    html:
-      html ||
-      buildNotificationHtml({ subject, title, message, actionUrl, actionText }),
-    // Fallback testuale: custom se presente, altrimenti il messaggio
-    text: text || message || title || subject,
-  };
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: process.env.MAIL_FROM,
+      to: Array.isArray(to) ? to : [to],
+      subject,
+      html:
+        html ||
+        buildNotificationHtml({
+          subject,
+          title,
+          message,
+          actionUrl,
+          actionText,
+        }),
+      text: text || message || title || subject,
+    }),
+    signal: AbortSignal.timeout(15000),
+  });
 
-  return await transporter.sendMail(mailOptions);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(
+      `Invio email fallito (${res.status}): ${data.message || JSON.stringify(data)}`,
+    );
+  }
+  return data;
 };
 
 module.exports = sendEmail;

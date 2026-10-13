@@ -1,7 +1,6 @@
 const db = require("../config/database");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const nodemailer = require("nodemailer");
 const crypto = require("crypto");
 const sendEmail = require("../config/mailer");
 const { isatty } = require("tty");
