@@ -4,7 +4,6 @@ const authRoutes = require("./routes/authRoutes");
 const helmet = require("helmet");
 const path = require("path");
 const http = require("http");
-const cookie = require("cookie");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 const rateLimit = require("express-rate-limit");
@@ -36,6 +35,16 @@ const io = new Server(server, {
 });
 
 app.use(cors(corsOptions));
+
+function parseCookies(header = "") {
+  const out = {};
+  for (const part of header.split(";")) {
+    const i = part.indexOf("=");
+    if (i === -1) continue;
+    out[part.slice(0, i).trim()] = decodeURIComponent(part.slice(i + 1).trim());
+  }
+  return out;
+}
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -104,7 +113,7 @@ app.get("/", (req, res) => {
 
 io.use((socket, next) => {
   try {
-    const cookies = cookie.parse(socket.request.headers.cookie || "");
+    const cookies = parseCookies(socket.request.headers.cookie || "");
     const token = cookies.token;
     if (!token) return next(new Error("Non autenticato"));
 
