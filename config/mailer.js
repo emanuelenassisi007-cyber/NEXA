@@ -57,7 +57,9 @@ const sendEmail = async ({
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: process.env.MAIL_FROM,
+      from: process.env.MAIL_FROM.includes("<")
+        ? process.env.MAIL_FROM
+        : `Nexa <${process.env.MAIL_FROM}>`,
       to: Array.isArray(to) ? to : [to],
       subject,
       html:
