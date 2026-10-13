@@ -154,35 +154,62 @@ exports.savePassword = async (req, res) => {
   }
 };
 
+const escapeHtml = (s = "") =>
+  String(s).replace(
+    /[&<>"']/g,
+    (c) =>
+      ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;",
+      })[c],
+  );
+
 exports.sendPassword = async (req, res) => {
   const { password, email, nome } = req.body;
+
+  if (!password || !email) {
+    return res.status(400).json({ errore: "Dati mancanti" });
+  }
+
   try {
     const passwordHash = await bcrypt.hash(password, 10);
     const scadenzaPassword = new Date(Date.now() + 5 * 60 * 60 * 1000);
-    const query = `UPDATE users SET password = ?, password_expiry = ? WHERE email = ?`;
 
-    await db.query(query, [passwordHash, scadenzaPassword, email]);
+    const [result] = await db.query(
+      `UPDATE users SET password = ?, password_expiry = ? WHERE email = ?`,
+      [passwordHash, scadenzaPassword, email],
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ errore: "Utente non trovato" });
+    }
+
+    const baseUrl = (
+      process.env.APP_URL || `${req.protocol}://${req.get("host")}`
+    ).replace(/\/$/, "");
+    const link = `${baseUrl}/createPassword.html`;
 
     await sendEmail({
       to: email,
       subject: "Password temporanea",
-      text: `Ecco a te la password temporanea per accedere al gestionale NEXA`,
+      text: `Password temporanea per accedere a NEXA: ${password}. Valida 5 ore. Crea la tua password qui: ${link}`,
       html: `
         <h1>Password temporanea</h1>
-        <p>Sig. ${nome}, il suo admin le ha inviato una password temporanea in modo da poter accedere al gestionale.</p>
-        <span style="font-size:25px;   color: black">${password}</span>
-        <p>Si ricordi di usare questa password per crearne una nuova personale in modo da poter accedere sempre.</p>
-        <a href = "/public/createPassword.html" style="text-decoration:none; color:blue; ">Clicca qui per creare una nuova password</a>
-        <p>Questa password ha validità 5 ore</p>
+        <p>Sig. ${escapeHtml(nome)}, il suo admin le ha inviato una password temporanea in modo da poter accedere al gestionale.</p>
+        <p style="font-size:25px; color:black; font-family:monospace">${escapeHtml(password)}</p>
+        <p>Usi questa password per crearne una nuova personale.</p>
+        <p><a href="${link}" style="color:blue">Clicca qui per creare una nuova password</a></p>
+        <p>Questa password ha validità 5 ore.</p>
       `,
     });
 
     res.status(201).json({ message: "Inviata password temporanea" });
   } catch (error) {
     console.error("Errore nell'invio della password", error);
-    res.status(500).json({
-      errore: "Errore durante la richiesta di invio",
-    });
+    res.status(500).json({ errore: "Errore durante la richiesta di invio" });
   }
 };
 
