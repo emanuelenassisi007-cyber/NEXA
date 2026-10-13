@@ -316,7 +316,9 @@ async function mostraProfilo() {
   if (user) {
     if (user.avatar) {
       const baseUrl = window.location.origin;
-      imgElement.src = (/^https?:\/\//i.test(user.avatar) ? user.avatar : baseUrl + user.avatar);
+      imgElement.src = /^https?:\/\//i.test(user.avatar)
+        ? user.avatar
+        : baseUrl + user.avatar;
       imgElement.style.display = "block";
       name.style.display = "none";
       surname.style.display = "none";
@@ -756,31 +758,45 @@ function triggerFileInput2() {
 }
 function handleAvatarChange(event) {
   const file = event.target.files[0];
+  if (!file) return;
 
-  if (file) {
-    if (!file.type.startsWith("image/")) {
-      alert("Per favore seleziona un file immagine valido.");
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = function (e) {};
-    reader.readAsDataURL(file);
-    inviaAvatarAlServer(file);
+  if (!file.type.startsWith("image/")) {
+    alert("Per favore seleziona un file immagine valido.");
+    event.target.value = "";
+    return;
   }
+
+  // anteprima immediata, poi arriva l'URL definitivo dal server
+  const reader = new FileReader();
+  reader.onload = (e) => setAvatarImages(e.target.result);
+  reader.readAsDataURL(file);
+
+  inviaAvatarAlServer(file);
+  event.target.value = ""; // permette di scegliere di nuovo lo stesso file
 }
 function inviaAvatarAlServer(file) {
   const formData = new FormData();
   formData.append("avatar", file);
+
   fetch(`${API_URL}/api/auth/update-avatar`, {
     credentials: "include",
     method: "POST",
     body: formData,
   })
-    .then((response) => response.json())
-    .then((data) => {})
+    .then(async (response) => {
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || data.message || "Caricamento fallito");
+      }
+      return data;
+    })
+    .then((data) => {
+      setAvatarImages(data.avatarUrl);
+    })
     .catch((error) => {
       console.error("Errore durante il caricamento:", error);
+      alert("Non è stato possibile caricare l'immagine.");
+      loadUserProfile(); // ripristina l'avatar precedente
     });
 }
 
@@ -812,9 +828,13 @@ async function loadUserProfile() {
     if (user.avatar) {
       const baseUrl = window.location.origin;
 
-      imgElement.src = (/^https?:\/\//i.test(user.avatar) ? user.avatar : baseUrl + user.avatar);
+      imgElement.src = /^https?:\/\//i.test(user.avatar)
+        ? user.avatar
+        : baseUrl + user.avatar;
       imgElement.style.display = "block";
-      imgElement2.src = (/^https?:\/\//i.test(user.avatar) ? user.avatar : baseUrl + user.avatar);
+      imgElement2.src = /^https?:\/\//i.test(user.avatar)
+        ? user.avatar
+        : baseUrl + user.avatar;
       imgElement2.style.display = "block";
       initialsElement.style.display = "none";
     } else {
@@ -1177,6 +1197,14 @@ document
 
 document.addEventListener("DOMContentLoaded", loadUserProfile);
 
+function setAvatarImages(url) {
+  const src = /^https?:\/\//i.test(url) ? url : window.location.origin + url;
+  imgElement.src = src;
+  imgElement2.src = src;
+  imgElement.style.display = "block";
+  imgElement2.style.display = "block";
+  initialsElement.style.display = "none";
+}
 async function removeAvatar() {
   fetch(`${API_URL}/api/auth/deleteAvatar`, {
     credentials: "include",
@@ -1184,6 +1212,8 @@ async function removeAvatar() {
   })
     .then((response) => response.json())
     .then((data) => {
+      if (!data.success) throw new Error(data.error || "Eliminazione fallita");
+
       imgElement.style.display = "none";
       imgElement2.style.display = "none";
       initialsElement.style.display = "block";
@@ -1192,10 +1222,9 @@ async function removeAvatar() {
         initialsElement.innerHTML = "";
         initialsElement.innerText = initialsUser;
       }, 3000);
-      return false;
     })
     .catch((error) => {
-      console.error("Errore durante il caricamento:", error);
+      console.error("Errore durante l'eliminazione:", error);
     });
 }
 

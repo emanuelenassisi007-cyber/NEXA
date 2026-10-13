@@ -788,7 +788,7 @@ exports.deleteAvatar = async (req, res) => {
     });
     const io = req.app.get("io") || req.app.get("socket.io");
     if (io) {
-      io.emit("avatar_delete", { action: "delete", id: result.insertId });
+      io.to(`user:${req.user.id}`).emit("avatar_delete", { action: "delete" });
     }
     await createNotification(
       req,
