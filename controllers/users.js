@@ -172,7 +172,7 @@ exports.sendPassword = async (req, res) => {
         <p>Sig. ${nome}, il suo admin le ha inviato una password temporanea in modo da poter accedere al gestionale.</p>
         <span style="font-size:25px;   color: black">${password}</span>
         <p>Si ricordi di usare questa password per crearne una nuova personale in modo da poter accedere sempre.</p>
-        <a href = "http://localhost:5500/public/createPassword.html" style="text-decoration:none; color:blue; ">Clicca qui per creare una nuova password</a>
+        <a href = "/public/createPassword.html" style="text-decoration:none; color:blue; ">Clicca qui per creare una nuova password</a>
         <p>Questa password ha validità 5 ore</p>
       `,
     });

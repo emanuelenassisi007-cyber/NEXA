@@ -142,7 +142,9 @@ async function mostraProfilo() {
   if (user) {
     if (user.avatar) {
       const baseUrl = window.location.origin;
-      imgElement.src = (/^https?:\/\//i.test(user.avatar) ? user.avatar : baseUrl + user.avatar);
+      imgElement.src = /^https?:\/\//i.test(user.avatar)
+        ? user.avatar
+        : baseUrl + user.avatar;
       imgElement.style.display = "block";
       name.style.display = "none";
       surname.style.display = "none";
@@ -852,6 +854,97 @@ function getStatus(lastActivity) {
     return (statusUser = "Inactive");
   }
 }
+let utenteSelezionato = null;
+
+function mostraMessaggioPass(testo, ok) {
+  errorContainerPass.classList.add("active");
+  errorContainerPass.classList.toggle("success", ok);
+  errorTextPass.style.display = "block";
+  errorTextPass.textContent = testo;
+
+  if (ok) {
+    setTimeout(() => {
+      errorContainerPass.classList.remove("active", "success");
+      errorTextPass.style.display = "none";
+    }, 2000);
+  }
+}
+
+async function inviaRichiestaPassword(
+  bottone,
+  endpoint,
+  body,
+  msgOk,
+  msgErrore,
+) {
+  bottone.disabled = true; // impedisce il doppio clic
+  try {
+    const response = await fetch(`${API_URL}/api/auth/${endpoint}`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!response.ok) throw new Error(`Errore del server: ${response.status}`);
+    await response.json();
+    mostraMessaggioPass(msgOk, true);
+  } catch (err) {
+    console.error(msgErrore, err);
+    mostraMessaggioPass("Errore durante l'operazione", false);
+  } finally {
+    bottone.disabled = false;
+  }
+}
+
+function initPasswordDialog() {
+  griglia.addEventListener("click", (event) => {
+    const el = event.target.closest(".passUser");
+    if (!el) return;
+    utenteSelezionato = { email: el.dataset.email, name: el.dataset.name };
+    if (dialogPassword.open) dialogPassword.close();
+    else dialogPassword.showModal();
+  });
+
+  dialogPassword.addEventListener("close", () => {
+    utenteSelezionato = null;
+  });
+
+  savePassword.addEventListener("click", () => {
+    if (!utenteSelezionato) return;
+    const password = textPassword.textContent;
+    if (password.includes("*") || password === "") {
+      mostraMessaggioPass("Genera una password prima di salvarla", false);
+      return;
+    }
+    inviaRichiestaPassword(
+      savePassword,
+      "savePassword",
+      { password, email: utenteSelezionato.email },
+      "Password salvata con successo",
+      "Impossibile salvare la password:",
+    );
+  });
+
+  sendEmail.addEventListener("click", () => {
+    if (!utenteSelezionato) return;
+    const password = textPassword.textContent;
+    if (password.includes("*") || password === "") {
+      mostraMessaggioPass("Genera una password prima di inviarla", false);
+      return;
+    }
+    inviaRichiestaPassword(
+      sendEmail,
+      "sendPassword",
+      {
+        password,
+        email: utenteSelezionato.email,
+        nome: utenteSelezionato.name,
+      },
+      "Password inviata con successo",
+      "Impossibile inviare la password:",
+    );
+  });
+}
 
 async function getUsers(
   search = "",
@@ -874,6 +967,7 @@ async function getUsers(
     const currentUser = await getCurrentUser();
 
     const isAdmin = currentUser && currentUser.role?.toUpperCase() === "ADMIN";
+
     data.users.forEach((element) => {
       const statoUtente = getStatus(element.last_activity);
       const colorestato = () => {
@@ -886,8 +980,6 @@ async function getUsers(
             return "black";
         }
       };
-
-      createPagination(data.currentPage, data.totalPages);
 
       const name = element.name;
       const email = element.email;
@@ -944,114 +1036,8 @@ async function getUsers(
           <hr style="grid-column: span 6; border: none; height: 1px; background-color: rgb(225, 225, 230); margin: 5px 0; width: 100%;" />
           `;
     });
-
+    createPagination(data.currentPage, data.totalPages);
     griglia.innerHTML = tuttoLHtml;
-
-    griglia.addEventListener("click", (event) => {
-      const passwordCliccata = event.target.closest(".passUser");
-
-      if (!passwordCliccata) return;
-
-      const emailUtente = passwordCliccata.dataset.email;
-      const nameUtente = passwordCliccata.dataset.name;
-
-      if (dialogPassword.open) {
-        dialogPassword.close();
-      } else {
-        dialogPassword.showModal();
-      }
-      savePassword.addEventListener("click", async () => {
-        const passwordDaCopiare = textPassword.textContent;
-        if (passwordDaCopiare.includes("*") || passwordDaCopiare === "") {
-          errorContainerPass.classList.add("active");
-          errorContainerPass.classList.remove("success");
-          errorTextPass.style.display = "block";
-          errorTextPass.textContent = "Genera una password prima di salvarla ";
-          return;
-        }
-        const dataPass = {
-          password: passwordDaCopiare,
-          email: emailUtente,
-        };
-
-        try {
-          const response = await fetch(`${API_URL}/api/auth/savePassword`, {
-            method: "POST",
-            credentials: "include",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(dataPass),
-          });
-
-          if (!response.ok)
-            throw new Error(`Errore del server: ${response.status}`);
-
-          const data = await response.json();
-
-          errorContainerPass.classList.add("active", "success");
-          errorTextPass.style.display = "block";
-          errorTextPass.textContent = "Password salvata con successo";
-
-          setTimeout(() => {
-            errorContainerPass.classList.remove("active", "success");
-            errorTextPass.style.display = "none";
-          }, 2000);
-        } catch (err) {
-          console.error("Impossibile salvare la password: ", err);
-          errorContainerPass.classList.add("active");
-          errorContainerPass.classList.remove("success");
-          errorTextPass.style.display = "block";
-          errorTextPass.textContent = "Errore durante il salvataggio";
-        }
-      });
-      sendEmail.addEventListener("click", async () => {
-        const passwordDaCopiare = textPassword.textContent;
-        if (passwordDaCopiare.includes("*") || passwordDaCopiare === "") {
-          errorContainerPass.classList.add("active");
-          errorContainerPass.classList.remove("success");
-          errorTextPass.style.display = "block";
-          errorTextPass.textContent = "Genera una password prima di inviarla ";
-          return;
-        }
-        const dataPass = {
-          password: passwordDaCopiare,
-          email: emailUtente,
-          nome: nameUtente,
-        };
-
-        try {
-          const response = await fetch(`${API_URL}/api/auth/sendPassword`, {
-            method: "POST",
-            credentials: "include",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(dataPass),
-          });
-
-          if (!response.ok)
-            throw new Error(`Errore del server: ${response.status}`);
-
-          const data = await response.json();
-
-          errorContainerPass.classList.add("active", "success");
-          errorTextPass.style.display = "block";
-          errorTextPass.textContent = "Password inviata con successo";
-
-          setTimeout(() => {
-            errorContainerPass.classList.remove("active", "success");
-            errorTextPass.style.display = "none";
-          }, 2000);
-        } catch (err) {
-          console.error("Impossibile inviare la password: ", err);
-          errorContainerPass.classList.add("active");
-          errorContainerPass.classList.remove("success");
-          errorTextPass.style.display = "block";
-          errorTextPass.textContent = "Errore durante il salvataggio";
-        }
-      });
-    });
   } catch (error) {}
 }
 getUsers();
@@ -1062,3 +1048,4 @@ search_user.addEventListener("input", () => {
   getUsers(search_user.value, categoryType, typeActive);
   clearFilters.style.display = "block";
 });
+initPasswordDialog();
