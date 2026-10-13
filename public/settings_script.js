@@ -785,7 +785,7 @@ function inviaAvatarAlServer(file) {
   })
     .then(async (response) => {
       const data = await response.json().catch(() => ({}));
-      if (!response.ok || !data.success) {
+      if (!response.ok || !data.avatarUrl) {
         throw new Error(data.error || data.message || "Caricamento fallito");
       }
       return data;
@@ -1210,10 +1210,14 @@ async function removeAvatar() {
     credentials: "include",
     method: "DELETE",
   })
-    .then((response) => response.json())
-    .then((data) => {
-      if (!data.success) throw new Error(data.error || "Eliminazione fallita");
-
+    .then(async (response) => {
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || data.message || "Eliminazione fallita");
+      }
+      return data;
+    })
+    .then(() => {
       imgElement.style.display = "none";
       imgElement2.style.display = "none";
       initialsElement.style.display = "block";
@@ -1227,7 +1231,6 @@ async function removeAvatar() {
       console.error("Errore durante l'eliminazione:", error);
     });
 }
-
 notifyOrders.addEventListener("change", async (e) => {
   const isChecked = e.target.checked;
 
