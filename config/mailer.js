@@ -49,6 +49,7 @@ const sendEmail = async ({
   html,
   text,
 }) => {
+  console.log("MAIL_FROM letto:", JSON.stringify(process.env.MAIL_FROM));
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
