@@ -9,45 +9,12 @@ const cookieParser = require("cookie-parser");
 const rateLimit = require("express-rate-limit");
 const { Server } = require("socket.io");
 
-app.set("trust proxy", 1);
 const app = express();
-app.use("/api", limiter);
-app.use("/api/auth/login", loginLimiter);
+app.set("trust proxy", 1);
 const server = http.createServer(app);
-app.use(express.json());
-const allowedOrigins = [process.env.CLIENT_URL || "http://localhost:5500"];
-const corsOptions = (req, callback) => {
-  const origin = req.header("Origin");
-  const sameHost = origin && origin.endsWith("//" + req.header("Host"));
-  const allowed =
-    !origin ||
-    sameHost ||
-    allowedOrigins.includes(origin) ||
-    process.env.NODE_ENV !== "production";
-
-  callback(null, {
-    origin: allowed,
-    credentials: true,
-    methods: ["GET", "POST", "PATCH", "DELETE"],
-  });
-};
-
 const io = new Server(server, {
   cors: { origin: true, credentials: true },
 });
-
-app.use(cors(corsOptions));
-
-function parseCookies(header = "") {
-  const out = {};
-  for (const part of header.split(";")) {
-    const i = part.indexOf("=");
-    if (i === -1) continue;
-    out[part.slice(0, i).trim()] = decodeURIComponent(part.slice(i + 1).trim());
-  }
-  return out;
-}
-
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 1000,
@@ -61,7 +28,8 @@ const loginLimiter = rateLimit({
   legacyHeaders: false,
   message: { message: "Troppi tentativi, riprova tra qualche minuto." },
 });
-
+app.use("/api", limiter);
+app.use("/api/auth/login", loginLimiter);
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -100,15 +68,12 @@ app.use(
     },
   }),
 );
-
-app.use(cookieParser());
-app.set("socket.io", io);
+app.use(cors(corsOptions));
 
 const uploadsDir =
   process.env.NODE_ENV === "production"
     ? "/data/uploads"
     : path.join(__dirname, "uploads");
-
 app.use(
   "/uploads",
   (req, res, next) => {
@@ -119,6 +84,37 @@ app.use(
 );
 app.use(express.static(path.join(__dirname, "public")));
 app.use("/public", express.static(path.join(__dirname, "public")));
+app.use(express.json());
+const allowedOrigins = [process.env.CLIENT_URL || "http://localhost:5500"];
+const corsOptions = (req, callback) => {
+  const origin = req.header("Origin");
+  const sameHost = origin && origin.endsWith("//" + req.header("Host"));
+  const allowed =
+    !origin ||
+    sameHost ||
+    allowedOrigins.includes(origin) ||
+    process.env.NODE_ENV !== "production";
+
+  callback(null, {
+    origin: allowed,
+    credentials: true,
+    methods: ["GET", "POST", "PATCH", "DELETE"],
+  });
+};
+
+function parseCookies(header = "") {
+  const out = {};
+  for (const part of header.split(";")) {
+    const i = part.indexOf("=");
+    if (i === -1) continue;
+    out[part.slice(0, i).trim()] = decodeURIComponent(part.slice(i + 1).trim());
+  }
+  return out;
+}
+
+app.use(cookieParser());
+app.set("socket.io", io);
+
 app.get("/", (req, res) => {
   res.redirect("/login.html");
 });
