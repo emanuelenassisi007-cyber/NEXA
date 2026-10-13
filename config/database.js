@@ -12,6 +12,9 @@ const db = mysql.createPool({
   port: process.env.DB_PORT || process.env.MYSQLPORT || 3306,
   waitForConnections: true,
   connectionLimit: 10,
+  connectTimeout: 20000,
+  enableKeepAlive: true,
+  keepAliveInitialDelay: 10000,
 });
 
 module.exports = db;

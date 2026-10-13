@@ -79,6 +79,7 @@ app.use(
           "https://fonts.googleapis.com",
           "https://ka-f.fontawesome.com",
           "https://cdnjs.cloudflare.com",
+          "https://cdn.jsdelivr.net",
         ],
         fontSrc: [
           "'self'",
@@ -87,7 +88,12 @@ app.use(
           "https://ka-f.fontawesome.com",
         ],
         imgSrc: ["'self'", "data:", "blob:"],
-        connectSrc: ["'self'", "wss:", "https://ka-f.fontawesome.com"],
+        connectSrc: [
+          "'self'",
+          "wss:",
+          "https://ka-f.fontawesome.com",
+          "https://cdn.jsdelivr.net",
+        ],
       },
     },
   }),
