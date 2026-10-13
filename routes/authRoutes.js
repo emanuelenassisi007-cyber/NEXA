@@ -306,7 +306,6 @@ router.post(
 router.delete(
   "/deleteAvatar",
   authenticateToken,
-  upload.single("avatar"),
   updateLastActivity,
   settings.deleteAvatar,
 );

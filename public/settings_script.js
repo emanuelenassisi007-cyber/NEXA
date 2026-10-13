@@ -316,7 +316,7 @@ async function mostraProfilo() {
   if (user) {
     if (user.avatar) {
       const baseUrl = window.location.origin;
-      imgElement.src = baseUrl + user.avatar;
+      imgElement.src = (/^https?:\/\//i.test(user.avatar) ? user.avatar : baseUrl + user.avatar);
       imgElement.style.display = "block";
       name.style.display = "none";
       surname.style.display = "none";
@@ -812,9 +812,9 @@ async function loadUserProfile() {
     if (user.avatar) {
       const baseUrl = window.location.origin;
 
-      imgElement.src = baseUrl + user.avatar;
+      imgElement.src = (/^https?:\/\//i.test(user.avatar) ? user.avatar : baseUrl + user.avatar);
       imgElement.style.display = "block";
-      imgElement2.src = baseUrl + user.avatar;
+      imgElement2.src = (/^https?:\/\//i.test(user.avatar) ? user.avatar : baseUrl + user.avatar);
       imgElement2.style.display = "block";
       initialsElement.style.display = "none";
     } else {

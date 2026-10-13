@@ -132,7 +132,7 @@ async function mostraProfilo() {
   if (user) {
     if (user.avatar) {
       const baseUrl = window.location.origin;
-      imgElement.src = baseUrl + user.avatar;
+      imgElement.src = (/^https?:\/\//i.test(user.avatar) ? user.avatar : baseUrl + user.avatar);
       imgElement.style.display = "block";
       name.style.display = "none";
       surname.style.display = "none";

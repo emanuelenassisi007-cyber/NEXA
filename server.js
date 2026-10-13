@@ -9,8 +9,10 @@ const cookieParser = require("cookie-parser");
 const rateLimit = require("express-rate-limit");
 const { Server } = require("socket.io");
 
-const app = express();
 app.set("trust proxy", 1);
+const app = express();
+app.use("/api", limiter);
+app.use("/api/auth/login", loginLimiter);
 const server = http.createServer(app);
 app.use(express.json());
 const allowedOrigins = [process.env.CLIENT_URL || "http://localhost:5500"];
@@ -98,8 +100,7 @@ app.use(
     },
   }),
 );
-app.use("/api", limiter);
-app.use("/api/auth/login", loginLimiter);
+
 app.use(cookieParser());
 app.set("socket.io", io);
 
