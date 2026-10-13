@@ -3,6 +3,7 @@ const db = require("../config/database");
 const rateLimit = require("express-rate-limit");
 const router = express.Router();
 const path = require("path");
+const fs = require("fs");
 const multer = require("multer");
 const authController = require("../controllers/authControllers");
 const dashboard = require("../controllers/dashboard");
@@ -22,10 +23,18 @@ const cookieParser = require("cookie-parser");
 const authenticateToken = require("../middleware/authMiddleware");
 const requireAdmin = require("../middleware/requireAdmin");
 const adminValidator = require("../middleware/adminValidator");
+const uploadFolder =
+  process.env.NODE_ENV === "production"
+    ? "/data/uploads"
+    : path.join(__dirname, "../uploads");
+
+if (!fs.existsSync(uploadFolder)) {
+  fs.mkdirSync(uploadFolder, { recursive: true });
+}
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, "../uploads"));
+    cb(null, uploadFolder);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
@@ -33,7 +42,6 @@ const storage = multer.diskStorage({
   },
 });
 const upload = multer({ storage: storage });
-
 router.post(
   "/register",
   adminValidator,

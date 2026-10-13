@@ -103,13 +103,18 @@ app.use("/api/auth/login", loginLimiter);
 app.use(cookieParser());
 app.set("socket.io", io);
 
+const uploadsDir =
+  process.env.NODE_ENV === "production"
+    ? "/data/uploads"
+    : path.join(__dirname, "uploads");
+
 app.use(
   "/uploads",
   (req, res, next) => {
     res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
     next();
   },
-  express.static(path.join(__dirname, "uploads")),
+  express.static(uploadsDir),
 );
 app.use(express.static(path.join(__dirname, "public")));
 app.use("/public", express.static(path.join(__dirname, "public")));
