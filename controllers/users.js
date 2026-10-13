@@ -63,7 +63,7 @@ exports.getUsers = async (req, res) => {
 exports.addUser = async (req, res) => {
   const { name, email, role } = req.body;
   try {
-    const query = `INSERT INTO users (full_name, email, role) VALUES (?, ?, ?)`;
+    const query = `INSERT INTO users (full_name, email, role, password) VALUES (?, ?, ?, '')`;
     const [result] = await db.execute(query, [name, email, role]);
 
     const io = req.app.get("io") || req.app.get("socket.io");
