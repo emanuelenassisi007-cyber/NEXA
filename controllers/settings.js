@@ -6,11 +6,15 @@ const crypto = require("crypto");
 const sendEmail = require("../config/mailer");
 const { bytes } = require("stream/consumers");
 const { exec } = require("child_process");
-const { spawn } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 const ExcelJS = require("exceljs");
-
+const os = require("os");
+const {
+  getBackupRoot,
+  dumpToFile,
+  restoreFromFile,
+} = require("../utils/backupTools");
 const otplib = require("otplib");
 const authenticator = otplib.authenticator;
 const QRCode = require("qrcode");
@@ -147,94 +151,59 @@ exports.getRecords = async (req, res) => {
 
 exports.createBackup = async (req, res) => {
   const now = new Date();
-
   const date = now
     .toISOString()
     .replace(/T/, "_")
     .replace(/:/g, "-")
     .split(".")[0];
 
-  const backupDir = path.join(__dirname, "..", "backups");
-
+  const backupDir = getBackupRoot();
   if (!fs.existsSync(backupDir)) {
     fs.mkdirSync(backupDir, { recursive: true });
   }
+
   const backupFileName = `backup_${date}.sql`;
-  const backupFile = path.join(backupDir, `backup_${date}.sql`);
+  const backupFile = path.join(backupDir, backupFileName);
 
-  const dump = spawn("C:\\xampp\\mysql\\bin\\mysqldump.exe", [
-    "-h",
-    process.env.DB_HOST,
-    "-u",
-    process.env.USER_DB,
-    `--password=${process.env.PASSWORD_DB}`,
-    process.env.DB_NAME,
-  ]);
-  const output = fs.createWriteStream(backupFile);
+  try {
+    await dumpToFile(db, backupFile);
 
-  dump.stdout.pipe(output);
+    const stats = fs.statSync(backupFile);
+    const sizeInMB = (stats.size / (1024 * 1024)).toFixed(2);
+    const backupType = req.body?.backup_type || "manual";
 
-  dump.stderr.on("data", (data) => {
-    console.error("mysqldump:", data.toString());
-  });
+    await db.execute(
+      "INSERT INTO backups (filename, file_size, create_at, backup_type) VALUES (?, ?, ?, ?)",
+      [backupFileName, sizeInMB, now, backupType],
+    );
 
-  dump.on("error", (error) => {
-    console.error("Errore mysqldump:", error);
-
-    if (fs.existsSync(backupFile)) {
-      fs.unlinkSync(backupFile);
-    }
-
-    res.status(500).json({
+    res.json({
+      success: true,
+      message: "Backup creato correttamente",
+      file: backupFileName,
+      size_bytes: sizeInMB,
+    });
+  } catch (error) {
+    console.error("Errore backup:", error);
+    if (fs.existsSync(backupFile)) fs.unlinkSync(backupFile);
+    return res.status(500).json({
       success: false,
       message: "Errore durante il backup",
     });
-  });
+  }
 
-  dump.on("close", async (code) => {
-    if (code !== 0) {
-      if (fs.existsSync(backupFile)) {
-        fs.unlinkSync(backupFile);
-      }
-      return res.status(500).json({
-        success: false,
-        message: "mysqldump ha restituito un errore",
-      });
-    }
-
-    try {
-      const stats = fs.statSync(backupFile);
-      const sizeInMB = (stats.size / (1024 * 1024)).toFixed(2);
-
-      const backupType = req.body?.backup_type || "manual";
-
-      const query =
-        "INSERT INTO backups (filename, file_size, create_at, backup_type) VALUES (?, ?, ?, ?)";
-      await db.execute(query, [backupFileName, sizeInMB, now, backupType]);
-
-      res.json({
-        success: true,
-        message: "Backup creato correttamente",
-        file: backupFileName,
-        size_bytes: sizeInMB,
-      });
-
-      await createNotification(
-        req,
-        req.user.id,
-        "Backup",
-        "Backup completato",
-        "Il backup del database è stato creato con successo",
-        true,
-      );
-    } catch (error) {
-      console.error("Errore salvataggio backup nel DB:", error);
-      res.status(500).json({
-        success: false,
-        message: "Backup creato su disco, ma errore nella registrazione a DB",
-      });
-    }
-  });
+  try {
+    await createNotification(
+      req,
+      req.user.id,
+      "Backup",
+      "Backup completato",
+      "Il backup del database è stato creato con successo",
+      true,
+    );
+  } catch (error) {
+    console.error("Errore notifica backup:", error);
+  }
 };
 
 exports.autoBackup = async (req, res) => {
@@ -273,70 +242,30 @@ cron.schedule("0 3 * * *", async () => {
     const [rows] = await db.query(
       "SELECT id FROM users WHERE is_auto_backup_enabled = 1 LIMIT 1",
     );
+    if (rows.length === 0) return;
 
-    if (rows.length === 0) {
+    const dir = path.join(getBackupRoot(), "auto");
+    fs.mkdirSync(dir, { recursive: true });
+
+    const fileName = `auto-backup-${new Date().toISOString().slice(0, 10)}-${Date.now()}.sql`;
+    const outputPath = path.join(dir, fileName);
+    const now = new Date();
+
+    try {
+      await dumpToFile(db, outputPath);
+    } catch (err) {
+      console.error("❌ Errore durante il backup automatico:", err.message);
+      if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
       return;
     }
 
-    const dataCorrente = new Date().toISOString().slice(0, 10);
-    const fileName = `auto-backup-${dataCorrente}-${Date.now()}.sql`;
-    const outputPath = path.join(backupDir, fileName);
-    const now = new Date();
+    const stats = fs.statSync(outputPath);
+    const sizeInMB = (stats.size / (1024 * 1024)).toFixed(2);
 
-    const dbUser = process.env.USER_DB || "root";
-    const dbPassword = process.env.PASSWORD_DB || "tuapassword";
-    const dbName = process.env.DB_NAME || "nomedatabase";
-    const dbHost = process.env.DB_HOST || "localhost";
-
-    const writeStream = fs.createWriteStream(outputPath);
-    const dump = spawn("C:\\xampp\\mysql\\bin\\mysqldump.exe", [
-      "-h",
-      process.env.DB_HOST || "localhost",
-      "-u",
-      process.env.USER_DB || "root",
-      `--password=${process.env.PASSWORD_DB || ""}`,
-      process.env.DB_NAME || "nomedatabase",
-    ]);
-
-    dump.stdout.pipe(writeStream);
-
-    dump.stderr.on("data", (data) => {
-      const msg = data.toString();
-      if (
-        !msg.includes(
-          "Using a password on the command line interface can be insecure",
-        )
-      ) {
-        console.warn(`⚠️ Warning mysqldump: ${msg}`);
-      }
-    });
-
-    dump.on("close", async (code) => {
-      if (code != 0) {
-        console.error(
-          `❌ Errore durante il backup automatico su disco: ${error.message}`,
-        );
-        return;
-      }
-
-      try {
-        const stats = fs.statSync(outputPath);
-        const sizeInMB = (stats.size / (1024 * 1024)).toFixed(2);
-        const backupType = "automatic";
-
-        const query =
-          "INSERT INTO backups (filename, file_size, create_at, backup_type) VALUES (?, ?, ?, ?)";
-        await db.execute(query, [fileName, sizeInMB, now, backupType]);
-      } catch (dbError) {
-        console.error(
-          "❌ Errore salvataggio backup automatico nel DB:",
-          dbError,
-        );
-      }
-    });
-    dump.on("error", (err) => {
-      console.error(`❌ Errore critico nel processo spawn: ${err.message}`);
-    });
+    await db.execute(
+      "INSERT INTO backups (filename, file_size, create_at, backup_type) VALUES (?, ?, ?, ?)",
+      [fileName, sizeInMB, now, "automatic"],
+    );
   } catch (error) {
     console.error("❌ Errore nel controllo del Cron Job:", error);
   }
@@ -724,14 +653,18 @@ exports.importData = async (req, res) => {
   const { filename, backup_type } = req.body;
   const userId = req.user.id;
 
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ success: false, error: "Non autorizzato" });
+  }
+
+  if (typeof filename !== "string" || !/^[\w.-]+\.sql$/.test(filename)) {
+    return res
+      .status(400)
+      .json({ success: false, error: "Nome file non valido." });
+  }
+
   const folder = backup_type === "automatic" ? "auto" : "";
-  const backupFilePath = path.join(
-    __dirname,
-    "..",
-    "backups",
-    folder,
-    filename,
-  );
+  const backupFilePath = path.join(getBackupRoot(), folder, filename);
 
   if (!fs.existsSync(backupFilePath)) {
     return res.status(404).json({
@@ -741,147 +674,70 @@ exports.importData = async (req, res) => {
   }
 
   try {
-    const readStream = fs.createReadStream(backupFilePath);
-
-    const mysqlArgs = [
-      "-h",
-      process.env.DB_HOST || "localhost",
-      "-u",
-      process.env.USER_DB || "root",
-    ];
-
-    const dbPassword = process.env.PASSWORD_DB || "";
-    if (dbPassword !== "") {
-      mysqlArgs.push(`-p${dbPassword}`);
-    }
-
-    mysqlArgs.push(process.env.DB_NAME || "nexa_db");
-
-    const restore = spawn("C:\\xampp\\mysql\\bin\\mysql.exe", mysqlArgs);
-
-    restore.on("error", (err) => {
-      console.error(
-        `❌ Errore critico nel processo spawn di ripristino: ${err.message}`,
-      );
-      if (!res.headersSent) {
-        return res.status(500).json({
-          success: false,
-          error: "Impossibile avviare il tool di ripristino.",
-        });
-      }
+    await restoreFromFile(backupFilePath);
+  } catch (err) {
+    console.error("❌ Errore di ripristino:", err.message);
+    return res.status(500).json({
+      success: false,
+      error: "Errore durante l'importazione del database.",
     });
-
-    readStream.pipe(restore.stdin);
-
-    restore.stderr.on("data", (data) => {
-      console.warn(`⚠️ Warning/Info durante il ripristino: ${data.toString()}`);
-    });
-
-    restore.on("close", async (code) => {
-      if (code !== 0) {
-        console.error(`❌ Errore di ripristino. Codice terminazione: ${code}`);
-        if (!res.headersSent) {
-          return res.status(500).json({
-            success: false,
-            error: "Errore durante l'importazione strutturale del database.",
-          });
-        }
-        return;
-      }
-
-      try {
-        await createNotification(
-          req,
-          userId,
-          "Importazione dati",
-          "Importazione dati completata",
-          "Hai importato i dati del backup con successo",
-          false,
-        );
-      } catch (notifErr) {
-        console.error(
-          "⚠️ Errore durante la creazione della notifica di import:",
-          notifErr,
-        );
-      }
-
-      if (!res.headersSent) {
-        return res.json({
-          success: true,
-          message: "Database ripristinato con successo!",
-        });
-      }
-    });
-  } catch (error) {
-    console.error("Errore generico nel controller importData:", error);
-    if (!res.headersSent) {
-      res
-        .status(500)
-        .json({ success: false, error: "Errore interno del server" });
-    }
   }
+
+  try {
+    await createNotification(
+      req,
+      userId,
+      "Importazione dati",
+      "Importazione dati completata",
+      "Hai importato i dati del backup con successo",
+      false,
+    );
+  } catch (notifErr) {
+    console.error("⚠️ Errore notifica di import:", notifErr);
+  }
+
+  res.json({ success: true, message: "Database ripristinato con successo!" });
 };
 
 exports.exportBackup = async (req, res) => {
-  try {
-    if (req.user.role !== "admin")
-      return res.status(403).json({ error: "Non autorizzato" });
-
-    const now = new Date().toISOString().slice(0, 10);
-    const fileName = `export-nexa_db-${now}.sql`;
-
-    res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
-    res.setHeader("Content-Type", "application/sql");
-
-    const dump = spawn("C:\\xampp\\mysql\\bin\\mysqldump.exe", [
-      "-h",
-      process.env.DB_HOST || "localhost",
-      "-u",
-      process.env.USER_DB || "root",
-      `--password=${process.env.PASSWORD_DB || ""}`,
-      process.env.DB_NAME || "nexa_db",
-    ]);
-
-    dump.stdout.pipe(res);
-
-    dump.stderr.on("data", (data) => {
-      const msg = data.toString();
-      if (
-        !msg.includes(
-          "Using a password on the command line interface can be insecure",
-        )
-      ) {
-        console.warn(`⚠️ Warning durante l'esportazione: ${msg}`);
-      }
-    });
-
-    dump.on("close", async (code) => {
-      if (code !== 0) {
-        console.error(`❌ Errore durante l'esportazione. Codice: ${code}`);
-        if (!res.headersSent) {
-          res
-            .status(500)
-            .send("Errore durante la generazione del dump del database.");
-        }
-      } else {
-        await createNotification(
-          req,
-          req.user.id,
-          "Esportazione database",
-          "Esportazione database completata",
-          "Hai esportato i dati del database con successo",
-          true,
-        );
-      }
-    });
-  } catch (error) {
-    console.error("Errore esportazione:", error);
-    if (!res.headersSent) {
-      res.status(500).json({ error: "Errore interno del server" });
-    }
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ error: "Non autorizzato" });
   }
-};
 
+  const now = new Date().toISOString().slice(0, 10);
+  const fileName = `export-nexa_db-${now}.sql`;
+  const tmpFile = path.join(os.tmpdir(), `export-${Date.now()}.sql`);
+
+  try {
+    await dumpToFile(db, tmpFile);
+  } catch (error) {
+    console.error("❌ Errore esportazione:", error);
+    if (fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile);
+    return res
+      .status(500)
+      .json({ error: "Errore durante la generazione del dump del database." });
+  }
+
+  res.download(tmpFile, fileName, async (err) => {
+    fs.unlink(tmpFile, () => {});
+    if (err) {
+      console.error("Errore invio export:", err.message);
+      return;
+    }
+    try {
+      await createNotification(
+        req,
+        req.user.id,
+        "Esportazione database",
+        "Esportazione database completata",
+        "Hai esportato i dati del database con successo",
+        true,
+      );
+    } catch (e) {
+      console.error("Errore notifica export:", e);
+    }
+  });
+};
 exports.updateAvatar = async (req, res) => {
   try {
     if (!req.file) {
