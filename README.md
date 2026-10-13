@@ -331,7 +331,7 @@ These are planned directions, not features necessarily included in the current r
 
 Developer and creator of NEXA.
 
-GitHub: [your-username](https://github.com/emanuelenassisi007-cyber)
+GitHub: [Emanuele Nassisi](https://github.com/emanuelenassisi007-cyber)
 
 ---
 
