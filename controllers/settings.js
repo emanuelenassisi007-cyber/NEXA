@@ -737,6 +737,7 @@ exports.exportBackup = async (req, res) => {
     }
   });
 };
+
 exports.updateAvatar = async (req, res) => {
   try {
     if (!req.file) {
@@ -744,7 +745,7 @@ exports.updateAvatar = async (req, res) => {
         error: "Nessun file caricato o formato non valido.",
       });
     }
-    const avatarPath = `/uploads/${req.file.filename}`;
+    const avatarPath = req.file.path;
     const userId = req.user.id || 1;
 
     const [result] = await db.execute(

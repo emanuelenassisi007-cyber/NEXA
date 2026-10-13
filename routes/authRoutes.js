@@ -5,6 +5,9 @@ const router = express.Router();
 const path = require("path");
 const fs = require("fs");
 const multer = require("multer");
+const { v2: cloudinary } = require("cloudinary");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
+
 const authController = require("../controllers/authControllers");
 const dashboard = require("../controllers/dashboard");
 const customers = require("../controllers/customers");
@@ -23,24 +26,23 @@ const cookieParser = require("cookie-parser");
 const authenticateToken = require("../middleware/authMiddleware");
 const requireAdmin = require("../middleware/requireAdmin");
 const adminValidator = require("../middleware/adminValidator");
-const uploadFolder =
-  process.env.NODE_ENV === "production"
-    ? "/data/uploads"
-    : path.join(__dirname, "../uploads");
 
-if (!fs.existsSync(uploadFolder)) {
-  fs.mkdirSync(uploadFolder, { recursive: true });
-}
+// Configurazione Cloudinary tramite le variabili d'ambiente di Railway
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadFolder);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
+// Storage per inviare le immagini direttamente a Cloudinary
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "nexa_uploads", // Cartella in cui verranno organizzati i file su Cloudinary
+    allowed_formats: ["jpg", "jpeg", "png", "webp", "gif"],
   },
 });
+
 const upload = multer({ storage: storage });
 router.post(
   "/register",
