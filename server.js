@@ -87,7 +87,7 @@ app.use(
           "https://fonts.gstatic.com",
           "https://ka-f.fontawesome.com",
         ],
-        imgSrc: ["'self'", "data:", "blob:"],
+        imgSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com"],
         connectSrc: [
           "'self'",
           "wss:",
