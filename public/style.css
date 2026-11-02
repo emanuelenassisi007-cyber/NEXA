@@ -2278,3 +2278,50 @@ video {
     margin-right: auto;
   }
 }
+
+/* ---------- Correzioni per stili inline su schermi piccoli ---------- */
+@media (max-width: 768px) {
+  /* Evita che larghezza percentuale e margini sommati superino lo schermo. */
+  [style*="width: 98%"] {
+    box-sizing: border-box;
+    width: calc(100% - 32px) !important;
+    margin: 16px !important;
+  }
+
+  /* Moduli ordine: affiancati su desktop, impilati su telefono. */
+  div:has(> .box-customers[style*="width: 60%"]) {
+    flex-wrap: wrap;
+  }
+  body:has(.box-customers[style*="width: 60%"]) .box-customers[style*="width: 60%"],
+  body:has(.box-customers[style*="width: 60%"]) .box-customers[style*="width: 40%"] {
+    box-sizing: border-box;
+    width: 100% !important;
+  }
+
+  /* Pannelli impostazioni: annulla le larghezze inline che comprimono
+     i contenuti e consente alle righe interne di andare a capo. */
+  body:has(#boxGeneral) .box-customers[style*="width: 80%"],
+  body:has(#boxGeneral) #boxGeneral {
+    box-sizing: border-box;
+    width: calc(100% - 32px) !important;
+    margin-left: 16px !important;
+    margin-right: 16px !important;
+  }
+
+  body:has(#boxGeneral) [style*="width: 40%"],
+  body:has(#boxGeneral) [style*="width: 50%"],
+  body:has(#boxGeneral) [style*="width: 60%"],
+  body:has(#boxGeneral) [style*="width: 70%"] {
+    box-sizing: border-box;
+    width: 100% !important;
+  }
+
+  body:has(#boxGeneral) .box-customers[style*="width: 40%"] {
+    margin-left: 0 !important;
+  }
+
+  body:has(#boxGeneral) [style*="flex-direction: row"] {
+    flex-wrap: wrap;
+    gap: 12px !important;
+  }
+}
