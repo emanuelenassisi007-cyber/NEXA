@@ -1,7 +1,6 @@
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
-const path = require("path");
 const http = require("http");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
@@ -148,18 +147,6 @@ app.use(cookieParser());
 // ---------------------------------------------------------------
 // File statici e pagina iniziale
 // ---------------------------------------------------------------
-const uploadsDir = isProd
-  ? process.env.UPLOADS_DIR || "/data/uploads"
-  : path.join(__dirname, "uploads");
-
-app.use(
-  "/uploads",
-  (req, res, next) => {
-    res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
-    next();
-  },
-  express.static(uploadsDir),
-);
 app.use(express.static(path.join(__dirname, "public")));
 app.use("/public", express.static(path.join(__dirname, "public")));
 
